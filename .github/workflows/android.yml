@@ -16,7 +16,7 @@ jobs:
 
       - name: Extract Android source project
         run: |
-          unzip -o PhiskVideos-Android-v1.3.1-Native-Auth-Fix.zip -d .
+          unzip -o PhiskVideos-Android-v1.3.2-Universal-Logout.zip -d .
 
       - name: Set up Java
         uses: actions/setup-java@v4
