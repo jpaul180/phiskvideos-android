@@ -4,6 +4,8 @@ name: Build PhiskVideos Android v1.3.4
 on:
   workflow_dispatch:
   push:
+    branches:
+      - native-auth-testing-from-main
 
 permissions:
   contents: read
@@ -18,10 +20,7 @@ jobs:
 
       - name: Verify Android source archive
         run: |
-          if [ ! -f PhiskVideos-Android-v1.3.4-Navigation-Fix.zip ]; then
-            echo "Android source ZIP not found!"
-            exit 1
-          fi
+          test -f PhiskVideos-Android-v1.3.4-Navigation-Fix.zip
 
       - name: Extract Android source
         run: |
@@ -35,10 +34,8 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK packages
-        run: |
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
