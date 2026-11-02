@@ -1,14 +1,10 @@
 
-name: Build PhiskVideos Android v1.3.4
+name: Build PhiskVideos APK
 
 on:
   workflow_dispatch:
   push:
-    branches:
-      - native-auth-testing-from-main
-
-permissions:
-  contents: read
+    branches: [ main ]
 
 jobs:
   build:
@@ -18,37 +14,38 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Verify Android source archive
+      - name: Apply uploaded Android source archive
         run: |
-          test -f PhiskVideos-Android-v1.3.4-Navigation-Fix.zip
+          if [ -f PhiskVideos-Android-v1.3.5-App-Refinements.zip ]; then
+            unzip -o PhiskVideos-Android-v1.3.5-App-Refinements.zip -d .
+          else
+            echo "Missing Android source archive."
+            exit 1
+          fi
 
-      - name: Extract Android source
-        run: |
-          unzip -o PhiskVideos-Android-v1.3.4-Navigation-Fix.zip -d .
-
-      - name: Set up Java 17
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
-        with:
-          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Build PhiskVideos APK
+      - name: Build debug APK
         run: gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: PhiskVideos-v1.3.4-APK
+          name: PhiskVideos-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-          retention-days: 14
