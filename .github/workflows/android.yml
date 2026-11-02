@@ -14,9 +14,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract Android source
+      - name: Apply Android source archive
         run: |
-          unzip -o PhiskVideos-Android-v1.3.5-App-Refinements.zip -d .
+          if [ -f PhiskVideos-Android-v1.3.6-Offline-Branding-Fixes.zip ]; then
+            unzip -o PhiskVideos-Android-v1.3.6-Offline-Branding-Fixes.zip -d .
+          else
+            echo "Android source ZIP not found!"
+            exit 1
+          fi
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -26,19 +31,16 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          packages: platform-tools
 
       - name: Install Android SDK packages
-        run: |
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Build APK
+      - name: Build Debug APK
         run: gradle assembleDebug
 
       - name: Upload APK
