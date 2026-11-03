@@ -1,3 +1,4 @@
+
 name: Build PhiskVideos Android 1.3.8
 
 on:
@@ -8,15 +9,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Apply PhiskVideos Android source archive
         run: |
-          ARCHIVE="PhiskVideos-Android-v1.3.8-Google-Login.zip"
+          ARCHIVE="PhiskVideos-Android-v1.3.8-Google-Login-Android7-Fix.zip"
           if [ ! -f "$ARCHIVE" ]; then
-            echo "Missing $ARCHIVE at the repository root."
+            echo "Missing $ARCHIVE at repository root."
             exit 1
           fi
           unzip -o "$ARCHIVE" -d .
@@ -47,10 +49,10 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          test -n "$KEYSTORE_BASE64" || (echo "Missing KEYSTORE_BASE64 secret" && exit 1)
-          test -n "$KEYSTORE_PASSWORD" || (echo "Missing KEYSTORE_PASSWORD secret" && exit 1)
-          test -n "$KEY_ALIAS" || (echo "Missing KEY_ALIAS secret" && exit 1)
-          test -n "$KEY_PASSWORD" || (echo "Missing KEY_PASSWORD secret" && exit 1)
+          test -n "$KEYSTORE_BASE64" || exit 1
+          test -n "$KEYSTORE_PASSWORD" || exit 1
+          test -n "$KEY_ALIAS" || exit 1
+          test -n "$KEY_PASSWORD" || exit 1
 
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/phiskvideos-release.jks"
           test -s "$RUNNER_TEMP/phiskvideos-release.jks"
