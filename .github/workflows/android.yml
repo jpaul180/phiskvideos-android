@@ -17,7 +17,7 @@ jobs:
 
       - name: Extract Android source
         run: |
-          unzip -o PhiskVideos-Android-v1.3.7-source_file.zip -d .
+          unzip -o PhiskVideos-Android-v1.3.7-source_file-fixed.zip -d .
 
       - name: Set up Java
         uses: actions/setup-java@v4
