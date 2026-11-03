@@ -16,7 +16,7 @@ jobs:
 
       - name: Apply PhiskVideos Android source archive
         run: |
-          ARCHIVE="PhiskVideos-Android-v1.3.8-Google-Login-Android7-Fix.zip"
+          ARCHIVE="PhiskVideos-Android-v1.3.8-Google-Login-Java-Fix.zip"
           if [ ! -f "$ARCHIVE" ]; then
             echo "Missing $ARCHIVE at repository root."
             exit 1
