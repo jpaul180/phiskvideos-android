@@ -5,8 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
-      - native-auth-testing-from-main
+      - '**'
 
 jobs:
   build:
@@ -16,6 +15,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Apply uploaded Android source archive
+        run: |
+          if [ -f PhiskVideos-Android-v1.3.7-source_file.zip ]; then
+            unzip -o PhiskVideos-Android-v1.3.7-source_file.zip -d .
+          else
+            echo "Source archive not found!"
+            exit 1
+          fi
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -24,24 +32,22 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Extract Android project
-        run: |
-          unzip -o PhiskVideos-Android-v1.3.6-Offline-Branding-Fixes.zip -d .
-
-      - name: Build APK
+      - name: Build debug APK
         run: gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: PhiskVideos-Android-v1.3.6
+          name: PhiskVideos-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
