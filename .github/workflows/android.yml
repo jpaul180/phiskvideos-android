@@ -16,7 +16,7 @@ jobs:
         run: |
           ARCHIVE="PhiskVideos-Android-v1.3.8-Google-Login.zip"
           if [ ! -f "$ARCHIVE" ]; then
-            echo "Missing $ARCHIVE at the repository root. Upload the v1.3.8 source ZIP first."
+            echo "Missing $ARCHIVE at the repository root."
             exit 1
           fi
           unzip -o "$ARCHIVE" -d .
@@ -29,9 +29,11 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
 
       - name: Install Android SDK packages
-        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -49,8 +51,10 @@ jobs:
           test -n "$KEYSTORE_PASSWORD" || (echo "Missing KEYSTORE_PASSWORD secret" && exit 1)
           test -n "$KEY_ALIAS" || (echo "Missing KEY_ALIAS secret" && exit 1)
           test -n "$KEY_PASSWORD" || (echo "Missing KEY_PASSWORD secret" && exit 1)
+
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/phiskvideos-release.jks"
           test -s "$RUNNER_TEMP/phiskvideos-release.jks"
+
           echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/phiskvideos-release.jks" >> "$GITHUB_ENV"
           echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
           echo "KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
