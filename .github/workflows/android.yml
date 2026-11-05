@@ -1,5 +1,4 @@
-
-name: Build PhiskVideos Android 1.3.9
+name: Build PhiskVideos Android 1.4.0
 
 on:
   workflow_dispatch:
@@ -15,9 +14,9 @@ jobs:
 
       - name: Apply PhiskVideos Android source archive
         run: |
-          ARCHIVE="PhiskVideos-Android-v1.3.9-Stage-2-FCM-Foundation.zip"
+          ARCHIVE="PhiskVideos-Android-v1.4.0-FCM-Integration.zip"
           if [ ! -f "$ARCHIVE" ]; then
-            echo "Missing $ARCHIVE at the repository root."
+            echo "Missing $ARCHIVE at the repository root. Upload the v1.4.0 source ZIP first."
             exit 1
           fi
           unzip -o "$ARCHIVE" -d .
@@ -29,10 +28,12 @@ jobs:
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
 
       - name: Install Android SDK packages
-        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -63,6 +64,6 @@ jobs:
       - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: PhiskVideos-Android-v1.3.9-FCM-Foundation
+          name: PhiskVideos-Android-v1.4.0-FCM-Integration
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
