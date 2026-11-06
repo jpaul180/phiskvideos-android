@@ -1,5 +1,4 @@
-
-name: Build PhiskVideos Android 1.5.0
+name: Build PhiskVideos Android 1.5.1
 
 on:
   workflow_dispatch:
@@ -14,9 +13,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Apply PhiskVideos Android v1.5.0 source archive
+      - name: Apply PhiskVideos Android v1.5.1 source archive
         run: |
-          ARCHIVE="PhiskVideos-Android-v1.5.0-Stage3-Notification-Centre.zip"
+          ARCHIVE="PhiskVideos-Android-v1.5.1-Notification-Thumbnails-App-Links.zip"
 
           if [ ! -f "$ARCHIVE" ]; then
             echo "ERROR: Missing $ARCHIVE at repository root."
@@ -58,13 +57,13 @@ jobs:
           test -n "$KEY_PASSWORD" || (echo "Missing KEY_PASSWORD" && exit 1)
 
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/phiskvideos-release.jks"
-
           test -s "$RUNNER_TEMP/phiskvideos-release.jks"
 
           echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/phiskvideos-release.jks" >> "$GITHUB_ENV"
           echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
           echo "KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
           echo "KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+
       - name: Get SHA-256 Signing Fingerprint
         run: |
           keytool -exportcert \
@@ -72,13 +71,14 @@ jobs:
             -alias "$KEY_ALIAS" \
             -storepass "$KEYSTORE_PASSWORD" \
           | openssl x509 -inform DER -noout -fingerprint -sha256
+      - name: Build signed APK and Android App Bundle
+        run: gradle --no-daemon clean assembleRelease bundleRelease
 
-      - name: Build signed release APK
-        run: gradle --no-daemon clean assembleRelease
-
-      - name: Upload signed APK
+      - name: Upload signed APK and AAB
         uses: actions/upload-artifact@v4
         with:
-          name: PhiskVideos-Android-v1.5.0-Stage3
-          path: app/build/outputs/apk/release/app-release.apk
+          name: PhiskVideos-Android-v1.5.1
+          path: |
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
