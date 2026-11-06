@@ -65,6 +65,13 @@ jobs:
           echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
           echo "KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
           echo "KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+      - name: Get SHA-256 Signing Fingerprint
+        run: |
+          keytool -exportcert \
+            -keystore "$ANDROID_KEYSTORE_PATH" \
+            -alias "$KEY_ALIAS" \
+            -storepass "$KEYSTORE_PASSWORD" \
+          | openssl x509 -inform DER -noout -fingerprint -sha256
 
       - name: Build signed release APK
         run: gradle --no-daemon clean assembleRelease
