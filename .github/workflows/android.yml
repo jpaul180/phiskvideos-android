@@ -1,4 +1,4 @@
-name: Build PhiskVideos Android 1.6.0
+name: Build PhiskVideos Android 1.6.1
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ jobs:
 
       - name: Apply PhiskVideos Android v1.6.0 source archive
         run: |
-          ARCHIVE="PhiskVideos-Android-v1.6.0-Stage4-Native-Homepage.zip"
+          ARCHIVE="PhiskVideos-Android-v1.6.1-Stage4-Native-Homepage.zip"
 
           if [ ! -f "$ARCHIVE" ]; then
             echo "ERROR: Missing $ARCHIVE at repository root."
@@ -77,7 +77,7 @@ jobs:
       - name: Upload signed APK and AAB
         uses: actions/upload-artifact@v4
         with:
-          name: PhiskVideos-Android-v1.6.0
+          name: PhiskVideos-Android-v1.6.1
           path: |
             app/build/outputs/apk/release/app-release.apk
             app/build/outputs/bundle/release/app-release.aab
