@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,16 +22,30 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          packages: 'platform-tools'
 
       - name: Install Android SDK packages
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+
+      - name: Locate Android project
+        run: |
+          ANDROID_DIR=$(find . -name settings.gradle \
+            -not -path '*/.gradle/*' \
+            -not -path '*/build/*' \
+            -print -quit | xargs -r dirname)
+
+          if [ -z "$ANDROID_DIR" ]; then
+            echo "ERROR: settings.gradle not found!"
+            exit 1
+          fi
+
+          echo "ANDROID_PROJECT_DIR=$ANDROID_DIR" >> "$GITHUB_ENV"
+          echo "Android project found at: $ANDROID_DIR"
 
       - name: Prepare Android release signing key
         env:
@@ -39,12 +54,16 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          test -n "$KEYSTORE_BASE64" || (echo "Missing KEYSTORE_BASE64" && exit 1)
-          test -n "$KEYSTORE_PASSWORD" || (echo "Missing KEYSTORE_PASSWORD" && exit 1)
-          test -n "$KEY_ALIAS" || (echo "Missing KEY_ALIAS" && exit 1)
-          test -n "$KEY_PASSWORD" || (echo "Missing KEY_PASSWORD" && exit 1)
-          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/phiskvideos-release.jks"
+          test -n "$KEYSTORE_BASE64"
+          test -n "$KEYSTORE_PASSWORD"
+          test -n "$KEY_ALIAS"
+          test -n "$KEY_PASSWORD"
+
+          echo "$KEYSTORE_BASE64" | base64 --decode \
+            > "$RUNNER_TEMP/phiskvideos-release.jks"
+
           test -s "$RUNNER_TEMP/phiskvideos-release.jks"
+
           echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/phiskvideos-release.jks" >> "$GITHUB_ENV"
           echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
           echo "KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
@@ -52,16 +71,22 @@ jobs:
 
       - name: Get SHA-256 Signing Fingerprint
         run: |
-          keytool -exportcert -keystore "$ANDROID_KEYSTORE_PATH" -alias "$KEY_ALIAS" -storepass "$KEYSTORE_PASSWORD" | openssl x509 -inform DER -noout -fingerprint -sha256
+          keytool -exportcert \
+            -keystore "$ANDROID_KEYSTORE_PATH" \
+            -alias "$KEY_ALIAS" \
+            -storepass "$KEYSTORE_PASSWORD" \
+            | openssl x509 -inform DER -noout -fingerprint -sha256
 
       - name: Build signed APK and Android App Bundle
-        run: gradle --no-daemon clean assembleRelease bundleRelease
+        run: |
+          cd "$ANDROID_PROJECT_DIR"
+          gradle --no-daemon clean assembleRelease bundleRelease
 
       - name: Upload signed APK and AAB
         uses: actions/upload-artifact@v4
         with:
           name: PhiskVideos-Android-v1.14.1
           path: |
-            app/build/outputs/apk/release/app-release.apk
-            app/build/outputs/bundle/release/app-release.aab
+            **/app/build/outputs/apk/release/*.apk
+            **/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
