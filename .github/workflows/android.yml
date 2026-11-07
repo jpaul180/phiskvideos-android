@@ -32,24 +32,45 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Locate Android project
+      - name: Extract Android source archive
         run: |
-          ANDROID_DIR=$(find . -name settings.gradle -not -path '*/.gradle/*' -not -path '*/build/*' -print -quit)
-          if [ -z "$ANDROID_DIR" ]; then
-            ANDROID_DIR=$(find . -name settings.gradle.kts -not -path '*/.gradle/*' -not -path '*/build/*' -print -quit)
-          fi
+          SOURCE_ZIP="PhiskVideos-v1.14.1-UPDATED-SOURCE.zip"
 
-          if [ -z "$ANDROID_DIR" ]; then
-            echo "::error::Could not find settings.gradle or settings.gradle.kts."
-            echo "Repository root contents:"
-            ls -la
+          if [ ! -f "$SOURCE_ZIP" ]; then
+            echo "::error::Expected source archive not found: $SOURCE_ZIP"
+            echo "ZIP files in repository:"
+            find . -maxdepth 2 -type f -iname '*.zip' -print
             exit 1
           fi
 
-          ANDROID_DIR=$(dirname "$ANDROID_DIR")
-          echo "ANDROID_PROJECT_DIR=$ANDROID_DIR" >> "$GITHUB_ENV"
-          echo "Android project found at: $ANDROID_DIR"
-          ls -la "$ANDROID_DIR"
+          mkdir -p android-build-source
+          unzip -q "$SOURCE_ZIP" -d android-build-source
+
+          if [ ! -f android-build-source/settings.gradle ] && [ ! -f android-build-source/settings.gradle.kts ]; then
+            echo "::error::Extracted archive does not contain a Gradle settings file at its root."
+            find android-build-source -maxdepth 3 -type f -name 'settings.gradle*' -print
+            exit 1
+          fi
+
+          if [ ! -f android-build-source/app/build.gradle ] && [ ! -f android-build-source/app/build.gradle.kts ]; then
+            echo "::error::Extracted archive does not contain app/build.gradle."
+            exit 1
+          fi
+
+          echo "Android source extracted successfully."
+          ls -la android-build-source
+
+      - name: Set Android version to v1.14.1
+        working-directory: android-build-source
+        run: |
+          if [ -f app/build.gradle ]; then
+            sed -i "s/versionCode [0-9]*/versionCode 28/" app/build.gradle
+            sed -i "s/versionName '[^']*'/versionName '1.14.1'/" app/build.gradle
+          else
+            sed -i 's/versionCode [0-9]*/versionCode 28/' app/build.gradle.kts
+            sed -i 's/versionName = "[^"]*"/versionName = "1.14.1"/' app/build.gradle.kts
+          fi
+          grep -nE 'versionCode|versionName' app/build.gradle* || true
 
       - name: Prepare Android release signing key
         env:
@@ -75,15 +96,14 @@ jobs:
         run: keytool -exportcert -keystore "$ANDROID_KEYSTORE_PATH" -alias "$KEY_ALIAS" -storepass "$KEYSTORE_PASSWORD" | openssl x509 -inform DER -noout -fingerprint -sha256
 
       - name: Build signed APK and Android App Bundle
-        run: |
-          cd "$ANDROID_PROJECT_DIR"
-          gradle --no-daemon clean assembleRelease bundleRelease
+        working-directory: android-build-source
+        run: gradle --no-daemon clean assembleRelease bundleRelease
 
       - name: Upload signed APK and AAB
         uses: actions/upload-artifact@v4
         with:
           name: PhiskVideos-Android-v1.14.1
           path: |
-            **/app/build/outputs/apk/release/*.apk
-            **/app/build/outputs/bundle/release/*.aab
+            android-build-source/app/build/outputs/apk/release/*.apk
+            android-build-source/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
