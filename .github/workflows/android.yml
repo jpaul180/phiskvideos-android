@@ -1,4 +1,3 @@
-
 name: Build PhiskVideos Android v1.14.1
 
 on:
@@ -21,11 +20,13 @@ jobs:
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
 
       - name: Install Android SDK packages
         run: |
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
@@ -33,19 +34,23 @@ jobs:
           gradle-version: '8.9'
 
       - name: Locate Android project
+        id: locate_project
         run: |
-          ANDROID_DIR=$(find . -name settings.gradle \
-            -not -path '*/.gradle/*' \
-            -not -path '*/build/*' \
+          ANDROID_DIR=$(find . \\( -name settings.gradle -o -name settings.gradle.kts \\) \\
+            -not -path '*/.gradle/*' \\
+            -not -path '*/build/*' \\
             -print -quit | xargs -r dirname)
 
           if [ -z "$ANDROID_DIR" ]; then
-            echo "ERROR: settings.gradle not found!"
+            echo "::error::settings.gradle or settings.gradle.kts not found."
+            echo "Repository root contents:"
+            ls -la
             exit 1
           fi
 
           echo "ANDROID_PROJECT_DIR=$ANDROID_DIR" >> "$GITHUB_ENV"
           echo "Android project found at: $ANDROID_DIR"
+          ls -la "$ANDROID_DIR"
 
       - name: Prepare Android release signing key
         env:
@@ -54,14 +59,12 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          test -n "$KEYSTORE_BASE64"
-          test -n "$KEYSTORE_PASSWORD"
-          test -n "$KEY_ALIAS"
-          test -n "$KEY_PASSWORD"
+          test -n "$KEYSTORE_BASE64" || (echo "::error::Missing KEYSTORE_BASE64" && exit 1)
+          test -n "$KEYSTORE_PASSWORD" || (echo "::error::Missing KEYSTORE_PASSWORD" && exit 1)
+          test -n "$KEY_ALIAS" || (echo "::error::Missing KEY_ALIAS" && exit 1)
+          test -n "$KEY_PASSWORD" || (echo "::error::Missing KEY_PASSWORD" && exit 1)
 
-          echo "$KEYSTORE_BASE64" | base64 --decode \
-            > "$RUNNER_TEMP/phiskvideos-release.jks"
-
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/phiskvideos-release.jks"
           test -s "$RUNNER_TEMP/phiskvideos-release.jks"
 
           echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/phiskvideos-release.jks" >> "$GITHUB_ENV"
@@ -71,10 +74,10 @@ jobs:
 
       - name: Get SHA-256 Signing Fingerprint
         run: |
-          keytool -exportcert \
-            -keystore "$ANDROID_KEYSTORE_PATH" \
-            -alias "$KEY_ALIAS" \
-            -storepass "$KEYSTORE_PASSWORD" \
+          keytool -exportcert \\
+            -keystore "$ANDROID_KEYSTORE_PATH" \\
+            -alias "$KEY_ALIAS" \\
+            -storepass "$KEYSTORE_PASSWORD" \\
             | openssl x509 -inform DER -noout -fingerprint -sha256
 
       - name: Build signed APK and Android App Bundle
