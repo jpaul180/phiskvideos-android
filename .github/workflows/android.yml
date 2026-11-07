@@ -34,7 +34,7 @@ jobs:
 
       - name: Extract Android source archive
         run: |
-          SOURCE_ZIP="PhiskVideos-v1.14.1-AVATAR-FIX-SOURCE.zip"
+          SOURCE_ZIP="PhiskVideos-v1.14.1-ANDROID-AVATAR-FIX-SOURCE.zip"
           LEGACY_SOURCE_ZIP="PhiskVideos-v1.14.1-UPDATED-SOURCE.zip"
 
           if [ -f "$SOURCE_ZIP" ]; then
