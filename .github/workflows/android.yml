@@ -34,30 +34,45 @@ jobs:
 
       - name: Extract Android source archive
         run: |
-          SOURCE_ZIP="PhiskVideos-v1.14.1-UPDATED-SOURCE.zip"
+          SOURCE_ZIP="PhiskVideos-v1.14.1-AVATAR-FIX-SOURCE.zip"
+          LEGACY_SOURCE_ZIP="PhiskVideos-v1.14.1-UPDATED-SOURCE.zip"
 
-          if [ ! -f "$SOURCE_ZIP" ]; then
-            echo "::error::Expected source archive not found: $SOURCE_ZIP"
+          if [ -f "$SOURCE_ZIP" ]; then
+            SELECTED_SOURCE="$SOURCE_ZIP"
+          elif [ -f "$LEGACY_SOURCE_ZIP" ]; then
+            echo "::warning::Avatar-fix source archive not found; using legacy source archive."
+            SELECTED_SOURCE="$LEGACY_SOURCE_ZIP"
+          else
+            echo "::error::Neither expected source archive was found."
             echo "ZIP files in repository:"
-            find . -maxdepth 2 -type f -iname '*.zip' -print
+            find . -maxdepth 3 -type f -iname '*.zip' -print
             exit 1
           fi
 
+          echo "Using source archive: $SELECTED_SOURCE"
           mkdir -p android-build-source
-          unzip -q "$SOURCE_ZIP" -d android-build-source
+          unzip -q "$SELECTED_SOURCE" -d android-build-source
 
-          if [ ! -f android-build-source/settings.gradle ] && [ ! -f android-build-source/settings.gradle.kts ]; then
-            echo "::error::Extracted archive does not contain a Gradle settings file at its root."
-            find android-build-source -maxdepth 3 -type f -name 'settings.gradle*' -print
+          SETTINGS_FILE=$(find android-build-source -maxdepth 3 -type f \( -name 'settings.gradle' -o -name 'settings.gradle.kts' \) -print -quit)
+          if [ -z "$SETTINGS_FILE" ]; then
+            echo "::error::Extracted archive does not contain a Gradle settings file."
+            find android-build-source -maxdepth 4 -type f -name 'settings.gradle*' -print
             exit 1
           fi
 
-          if [ ! -f android-build-source/app/build.gradle ] && [ ! -f android-build-source/app/build.gradle.kts ]; then
-            echo "::error::Extracted archive does not contain app/build.gradle."
+          APP_BUILD_FILE=$(find android-build-source -maxdepth 4 -type f \( -path '*/app/build.gradle' -o -path '*/app/build.gradle.kts' \) -print -quit)
+          if [ -z "$APP_BUILD_FILE" ]; then
+            echo "::error::Extracted archive does not contain app/build.gradle or app/build.gradle.kts."
             exit 1
           fi
 
-          echo "Android source extracted successfully."
+          PROJECT_ROOT=$(dirname "$SETTINGS_FILE")
+          if [ "$PROJECT_ROOT" != "android-build-source" ]; then
+            echo "::error::Source archive contains an unexpected nested project root: $PROJECT_ROOT"
+            exit 1
+          fi
+
+          echo "Android source extracted and structure validated."
           ls -la android-build-source
 
       - name: Set Android version to v1.14.1
@@ -102,7 +117,7 @@ jobs:
       - name: Upload signed APK and AAB
         uses: actions/upload-artifact@v4
         with:
-          name: PhiskVideos-Android-v1.14.1
+          name: PhiskVideos-Android-v1.14.1-Avatar-Fix
           path: |
             android-build-source/app/build/outputs/apk/release/*.apk
             android-build-source/app/build/outputs/bundle/release/*.aab
