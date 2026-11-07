@@ -16,7 +16,7 @@ jobs:
 
       - name: Apply v1.14.1 source archive
         run: |
-          ARCHIVE="PhiskVideos-Android-v1.14.1-Homepage-Icons-Avatar-Polish.zip"
+          ARCHIVE="PhiskVideos-v1.14.1-FIXED-SOURCE.zip"
 
           if [ ! -f "$ARCHIVE" ]; then
             echo "ERROR: Source archive not found!"
