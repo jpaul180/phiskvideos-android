@@ -25,8 +25,7 @@ jobs:
           packages: 'platform-tools'
 
       - name: Install Android SDK packages
-        run: |
-          sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+        run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
@@ -34,20 +33,20 @@ jobs:
           gradle-version: '8.9'
 
       - name: Locate Android project
-        id: locate_project
         run: |
-          ANDROID_DIR=$(find . \\( -name settings.gradle -o -name settings.gradle.kts \\) \\
-            -not -path '*/.gradle/*' \\
-            -not -path '*/build/*' \\
-            -print -quit | xargs -r dirname)
+          ANDROID_DIR=$(find . -name settings.gradle -not -path '*/.gradle/*' -not -path '*/build/*' -print -quit)
+          if [ -z "$ANDROID_DIR" ]; then
+            ANDROID_DIR=$(find . -name settings.gradle.kts -not -path '*/.gradle/*' -not -path '*/build/*' -print -quit)
+          fi
 
           if [ -z "$ANDROID_DIR" ]; then
-            echo "::error::settings.gradle or settings.gradle.kts not found."
+            echo "::error::Could not find settings.gradle or settings.gradle.kts."
             echo "Repository root contents:"
             ls -la
             exit 1
           fi
 
+          ANDROID_DIR=$(dirname "$ANDROID_DIR")
           echo "ANDROID_PROJECT_DIR=$ANDROID_DIR" >> "$GITHUB_ENV"
           echo "Android project found at: $ANDROID_DIR"
           ls -la "$ANDROID_DIR"
@@ -73,12 +72,7 @@ jobs:
           echo "KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
 
       - name: Get SHA-256 Signing Fingerprint
-        run: |
-          keytool -exportcert \\
-            -keystore "$ANDROID_KEYSTORE_PATH" \\
-            -alias "$KEY_ALIAS" \\
-            -storepass "$KEYSTORE_PASSWORD" \\
-            | openssl x509 -inform DER -noout -fingerprint -sha256
+        run: keytool -exportcert -keystore "$ANDROID_KEYSTORE_PATH" -alias "$KEY_ALIAS" -storepass "$KEYSTORE_PASSWORD" | openssl x509 -inform DER -noout -fingerprint -sha256
 
       - name: Build signed APK and Android App Bundle
         run: |
