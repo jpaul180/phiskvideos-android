@@ -34,7 +34,8 @@ jobs:
           ARCHIVE="PhiskVideos-Android-v1.16.3-Native-PiP-Surface-Fix.zip"
           test -f "$ARCHIVE" || { echo "::error::Missing $ARCHIVE in repository root."; exit 1; }
           unzip -o "$ARCHIVE" -d . -x ".github/workflows/android.yml"
-\n      - name: Verify v1.16.3 source
+
+      - name: Verify v1.16.3 source
         run: |
           set -euo pipefail
           test -f app/src/main/res/layout/view_phisk_player.xml
