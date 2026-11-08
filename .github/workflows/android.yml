@@ -1,4 +1,4 @@
-name: Build PhiskVideos Android v1.15.0 - Native Video Page
+name: Build PhiskVideos Android v1.16.0 - Offline Video Experience
 
 on:
   workflow_dispatch:
@@ -38,11 +38,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Verify and extract v1.15.0 source archive
+      - name: Verify and extract v1.16.0 source archive
         shell: bash
         run: |
           set -euo pipefail
-          SOURCE_ZIP="PhiskVideos-Android-v1.15.0-Native-Video-Page.zip"
+          SOURCE_ZIP="PhiskVideos-Android-v1.16.0-Offline-Video-Experience.zip"
 
           if [[ ! -f "$SOURCE_ZIP" ]]; then
             echo "::error::Missing $SOURCE_ZIP in the repository root."
@@ -62,8 +62,8 @@ jobs:
           test -f app/src/main/AndroidManifest.xml
           test -f app/google-services.json
 
-          grep -q "versionName '1.15.0'" app/build.gradle
-          grep -q 'versionCode 28' app/build.gradle
+          grep -q "versionName '1.16.0'" app/build.gradle
+          grep -q 'versionCode 29' app/build.gradle
 
           echo "Source structure and Android version verified."
           echo "Gradle plugin configuration:"
@@ -115,7 +115,7 @@ jobs:
       - name: Upload signed APK and AAB
         uses: actions/upload-artifact@v4
         with:
-          name: PhiskVideos-Android-v1.15.0-Native-Video-Page
+          name: PhiskVideos-Android-v1.16.0-Offline-Video-Experience
           path: |
             app/build/outputs/apk/release/app-release.apk
             app/build/outputs/bundle/release/app-release.aab
