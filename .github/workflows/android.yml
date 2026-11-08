@@ -96,6 +96,20 @@ jobs:
           fi
           echo "Applied Media3 TextureView surface type compatibility fix."
 
+      - name: Remove unsupported programmatic PlayerView surface calls
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Media3 PlayerView exposes surface_type as an XML attribute, not a Java setter.
+          # Remove the unsupported calls so the app compiles with the dependency in this archive.
+          sed -i 's/playerView[.]setSurfaceType(2);//g' app/src/main/java/co/phisk/videos/NativePlayerActivity.java
+          sed -i 's/playerView[.]setSurfaceType(2);//g' app/src/main/java/co/phisk/videos/OfflineVideoActivity.java
+          if grep -n 'setSurfaceType' app/src/main/java/co/phisk/videos/NativePlayerActivity.java app/src/main/java/co/phisk/videos/OfflineVideoActivity.java; then
+            echo "::error::Unsupported PlayerView surface setter remains."
+            exit 1
+          fi
+          echo "Removed unsupported PlayerView Java setter calls."
+
       - name: Prepare Android release signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
