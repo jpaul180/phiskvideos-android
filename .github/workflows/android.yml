@@ -35,6 +35,18 @@ jobs:
           test -f "$ARCHIVE" || { echo "::error::Missing $ARCHIVE in repository root."; exit 1; }
           unzip -o "$ARCHIVE" -d . -x ".github/workflows/android.yml"
 
+      - name: Ensure DownloadsActivity Intent import
+        shell: bash
+        run: |
+          set -euo pipefail
+          FILE="app/src/main/java/co/phisk/videos/DownloadsActivity.java"
+          test -f "$FILE"
+          if ! grep -q '^import android.content.Intent;' "$FILE"; then
+            sed -i '/^package .*;/a import android.content.Intent;' "$FILE"
+          fi
+          grep -q '^import android.content.Intent;' "$FILE"
+          echo "Verified DownloadsActivity Intent import."
+
       - name: Verify v1.16.3 source
         run: |
           set -euo pipefail
