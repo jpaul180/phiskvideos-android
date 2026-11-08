@@ -93,9 +93,9 @@ jobs:
             app/src/main/java/co/phisk/videos/NativePlayerActivity.java \\
             app/src/main/java/co/phisk/videos/OfflineVideoActivity.java; do
             test -f "$FILE"
-            sed -i 's/PlayerView\\.SURFACE_TYPE_TEXTURE_VIEW/2/g' "$FILE"
+            sed -i 's/PlayerView[.]SURFACE_TYPE_TEXTURE_VIEW/2/g' "$FILE"
           done
-          if grep -R 'PlayerView\\.SURFACE_TYPE_TEXTURE_VIEW' app/src/main/java/co/phisk/videos/NativePlayerActivity.java app/src/main/java/co/phisk/videos/OfflineVideoActivity.java; then
+          if grep -R 'PlayerView[.]SURFACE_TYPE_TEXTURE_VIEW' app/src/main/java/co/phisk/videos/NativePlayerActivity.java app/src/main/java/co/phisk/videos/OfflineVideoActivity.java; then
             echo "::error::TextureView surface constant replacement did not apply."
             exit 1
           fi
