@@ -1,4 +1,4 @@
-name: Build PhiskVideos Android v1.16.1 - Native Player Final Fixes
+name: Build PhiskVideos Android v1.16.2 - Native Mini-Player Fixes
 
 on:
   workflow_dispatch:
@@ -38,11 +38,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Verify and extract v1.16.1 source archive
+      - name: Verify and extract v1.16.2 source archive
         shell: bash
         run: |
           set -euo pipefail
-          SOURCE_ZIP="PhiskVideos-Android-v1.16.1-Native-Player-Final-Fixes.zip"
+          SOURCE_ZIP="PhiskVideos-Android-v1.16.2-Native-Mini-Player-Fixes.zip"
 
           if [[ ! -f "$SOURCE_ZIP" ]]; then
             echo "::error::Missing $SOURCE_ZIP in the repository root."
@@ -52,8 +52,8 @@ jobs:
           fi
 
           echo "Extracting $SOURCE_ZIP"
-          # Preserve this workflow instead of replacing it with the copy
-          # bundled inside the source archive.
+          # Keep the active workflow rather than replacing it with any
+          # workflow file bundled inside the source archive.
           unzip -o "$SOURCE_ZIP" -d . -x ".github/workflows/android.yml"
 
           test -f settings.gradle
@@ -62,8 +62,8 @@ jobs:
           test -f app/src/main/AndroidManifest.xml
           test -f app/google-services.json
 
-          grep -q "versionName '1.16.1'" app/build.gradle
-          grep -q 'versionCode 30' app/build.gradle
+          grep -q "versionName '1.16.2'" app/build.gradle
+          grep -q 'versionCode 31' app/build.gradle
 
           echo "Source structure and Android version verified."
           echo "Gradle plugin configuration:"
@@ -127,7 +127,7 @@ jobs:
       - name: Upload signed APK and AAB
         uses: actions/upload-artifact@v4
         with:
-          name: PhiskVideos-Android-v1.16.1-Native-Player-Final-Fixes
+          name: PhiskVideos-Android-v1.16.2-Native-Mini-Player-Fixes
           path: |
             app/build/outputs/apk/release/app-release.apk
             app/build/outputs/bundle/release/app-release.aab
