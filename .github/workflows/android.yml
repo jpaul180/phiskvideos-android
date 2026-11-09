@@ -1,4 +1,4 @@
-name: Build PhiskVideos Android (latest v1.16.x source archive)
+name: Build PhiskVideos Android v1.16.7 (Settings Update)
 
 on:
   workflow_dispatch:
@@ -15,54 +15,78 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
+
       - uses: android-actions/setup-android@v4
         with:
           packages: 'platform-tools'
+
       - name: Install Android SDK packages
         run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Extract latest v1.16.x source archive
+
+      - name: Extract v1.16.7 Settings Update source archive
         shell: bash
         run: |
           set -euo pipefail
-          ARCHIVE="$(find . -maxdepth 1 -type f -name 'PhiskVideos-Android-v1.16.*.zip' -printf '%f\n' | sort -V | tail -n1)"
-          test -n "$ARCHIVE" || { echo "::error::No PhiskVideos-Android-v1.16.x source archive found in repository root."; exit 1; }
+          ARCHIVE="PhiskVideos-Android-v1.16.7-Settings-Update.zip"
+          if [[ ! -f "$ARCHIVE" ]]; then
+            echo "::error::Missing $ARCHIVE. Upload the updated source ZIP to the repository root."
+            echo "Repository root files:"
+            ls -la
+            exit 1
+          fi
           echo "SOURCE_ARCHIVE=${ARCHIVE%.zip}" >> "$GITHUB_ENV"
           unzip -o "$ARCHIVE" -d . -x ".github/workflows/android.yml"
+
           if [[ -f android/settings.gradle && -f android/app/build.gradle ]]; then
             echo "ANDROID_PROJECT_DIR=android" >> "$GITHUB_ENV"
           elif [[ -f settings.gradle && -f app/build.gradle ]]; then
             echo "ANDROID_PROJECT_DIR=." >> "$GITHUB_ENV"
           else
-            echo "::error::Could not locate Android Gradle project after extracting $ARCHIVE."
-            find . -maxdepth 3 \( -name settings.gradle -o -name build.gradle \)
+            echo "::error::Could not locate the Android Gradle project after extracting $ARCHIVE."
+            find . -maxdepth 4 \( -name settings.gradle -o -name build.gradle \) -print
             exit 1
           fi
 
-      - name: Verify Android source and release version
+      - name: Verify v1.16.7 Settings source
         shell: bash
         run: |
           set -euo pipefail
           cd "$ANDROID_PROJECT_DIR"
+
           test -f app/src/main/res/layout/view_phisk_player.xml
+          test -f app/src/main/java/co/phisk/videos/NativeSettingsActivity.java
+          test -f app/src/main/res/drawable-nodpi/ic_settings_user-hexagon.png
+          test -f app/src/main/res/drawable-nodpi/ic_settings_lock.png
+          test -f app/src/main/res/drawable-nodpi/ic_settings_spy.png
+
           VERSION_NAME="$(sed -n "s/.*versionName '\([^']*\)'.*/\1/p" app/build.gradle | head -n1)"
           VERSION_CODE="$(sed -n "s/.*versionCode \([0-9][0-9]*\).*/\1/p" app/build.gradle | head -n1)"
-          [[ "$VERSION_NAME" =~ ^1\.16\.[0-9]+$ ]] || { echo "::error::Unexpected Android version: $VERSION_NAME"; exit 1; }
+          [[ "$VERSION_NAME" == "1.16.7" ]] || { echo "::error::Expected Android version 1.16.7, found: $VERSION_NAME"; exit 1; }
           test -n "$VERSION_CODE"
-          if [[ "$VERSION_NAME" == "1.16.6" ]]; then
-            test -f app/src/main/java/co/phisk/videos/NativeCreatorChannelActivity.java
-            test -f app/src/main/java/co/phisk/videos/NativeCreatorChannelEditorActivity.java
-            grep -q 'NativeCreatorChannelEditorActivity' app/src/main/AndroidManifest.xml
-            grep -q 'Show more' app/src/main/java/co/phisk/videos/NativeCreatorChannelActivity.java
-            grep -q 'Show less' app/src/main/java/co/phisk/videos/NativeCreatorChannelActivity.java
-          fi
-          ! grep -R -E 'PictureInPicture|enterPictureInPictureMode|supportsPictureInPicture|onUserLeaveHint|navigateWithMiniPlayer' app/src/main/java/co/phisk/videos/NativePlayerActivity.java app/src/main/java/co/phisk/videos/OfflineVideoActivity.java app/src/main/AndroidManifest.xml
+
+          SETTINGS="app/src/main/java/co/phisk/videos/NativeSettingsActivity.java"
+          grep -q 'Edit profile' "$SETTINGS"
+          grep -q 'Password & security' "$SETTINGS"
+          grep -q 'Privacy & account' "$SETTINGS"
+          grep -q 'Log out' "$SETTINGS"
+          grep -q 'dark_mode' "$SETTINGS"
+          grep -q 'confirmLogout' "$SETTINGS"
+          grep -q 'app-auth/logout' "$SETTINGS"
+
+          ! grep -R -E 'PictureInPicture|enterPictureInPictureMode|supportsPictureInPicture|onUserLeaveHint|navigateWithMiniPlayer' \
+            app/src/main/java/co/phisk/videos/NativePlayerActivity.java \
+            app/src/main/java/co/phisk/videos/OfflineVideoActivity.java \
+            app/src/main/AndroidManifest.xml
+
       - name: Prepare Android release signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -80,8 +104,10 @@ jobs:
           echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
           echo "KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
           echo "KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+
       - name: Build release APK and AAB
         run: cd "$ANDROID_PROJECT_DIR" && gradle --no-daemon --stacktrace clean assembleRelease bundleRelease
+
       - name: Verify APK signature
         shell: bash
         run: |
@@ -90,6 +116,7 @@ jobs:
           APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
           test -x "$APKSIGNER"
           "$APKSIGNER" verify --verbose app/build/outputs/apk/release/app-release.apk
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.SOURCE_ARCHIVE }}-Build
