@@ -31,7 +31,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ARCHIVE="$(find . -maxdepth 1 -type f -name 'PhiskVideos-Android-v1.16.*.zip' -printf '%f\\n' | sort -V | tail -n1)"
+          ARCHIVE="$(find . -maxdepth 1 -type f -name 'PhiskVideos-Android-v1.16.*.zip' -printf '%f\n' | sort -V | tail -n1)"
           test -n "$ARCHIVE" || { echo "::error::No PhiskVideos-Android-v1.16.x source archive found in repository root."; exit 1; }
           echo "SOURCE_ARCHIVE=${ARCHIVE%.zip}" >> "$GITHUB_ENV"
           unzip -o "$ARCHIVE" -d . -x ".github/workflows/android.yml"
@@ -41,7 +41,7 @@ jobs:
             echo "ANDROID_PROJECT_DIR=." >> "$GITHUB_ENV"
           else
             echo "::error::Could not locate Android Gradle project after extracting $ARCHIVE."
-            find . -maxdepth 3 -name settings.gradle -o -name build.gradle
+            find . -maxdepth 3 \( -name settings.gradle -o -name build.gradle \)
             exit 1
           fi
 
@@ -51,9 +51,9 @@ jobs:
           set -euo pipefail
           cd "$ANDROID_PROJECT_DIR"
           test -f app/src/main/res/layout/view_phisk_player.xml
-          VERSION_NAME="$(sed -n "s/.*versionName '\\([^']*\\)'.*/\\1/p" app/build.gradle | head -n1)"
-          VERSION_CODE="$(sed -n "s/.*versionCode \\([0-9][0-9]*\\).*/\\1/p" app/build.gradle | head -n1)"
-          [[ "$VERSION_NAME" =~ ^1\\.16\\.[0-9]+$ ]] || { echo "::error::Unexpected Android version: $VERSION_NAME"; exit 1; }
+          VERSION_NAME="$(sed -n "s/.*versionName '\([^']*\)'.*/\1/p" app/build.gradle | head -n1)"
+          VERSION_CODE="$(sed -n "s/.*versionCode \([0-9][0-9]*\).*/\1/p" app/build.gradle | head -n1)"
+          [[ "$VERSION_NAME" =~ ^1\.16\.[0-9]+$ ]] || { echo "::error::Unexpected Android version: $VERSION_NAME"; exit 1; }
           test -n "$VERSION_CODE"
           if [[ "$VERSION_NAME" == "1.16.6" ]]; then
             test -f app/src/main/java/co/phisk/videos/NativeCreatorChannelActivity.java
