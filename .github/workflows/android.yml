@@ -46,6 +46,29 @@ jobs:
           echo "SOURCE_ARCHIVE=${ARCHIVE%.zip}" >> "$GITHUB_ENV"
           unzip -o "$ARCHIVE" -d . -x ".github/workflows/android.yml"
 
+          # Android resource filenames cannot contain hyphens. Normalize any
+          # supplied resource filenames and their source-code references.
+          PROJECT_ROOT="."
+          if [[ -d android/app/src/main/res ]]; then PROJECT_ROOT="android"; fi
+          RES_DIR="$PROJECT_ROOT/app/src/main/res"
+          if [[ -d "$RES_DIR" ]]; then
+            while IFS= read -r -d '' FILE; do
+              BASE="$(basename "$FILE")"
+              FIXED="${BASE//-/_}"
+              if [[ "$BASE" != "$FIXED" ]]; then
+                DIR="$(dirname "$FILE")"
+                mv "$FILE" "$DIR/$FIXED"
+                OLD_REF="${BASE%.*}"
+                NEW_REF="${FIXED%.*}"
+                find "$PROJECT_ROOT/app/src" -type f -print0 | while IFS= read -r -d '' SOURCE; do
+                  if file "$SOURCE" | grep -q text; then
+                    sed -i "s/$OLD_REF/$NEW_REF/g" "$SOURCE"
+                  fi
+                done
+              fi
+            done < <(find "$RES_DIR" -type f -name '*-*' -print0)
+          fi
+
           if [[ -f android/settings.gradle && -f android/app/build.gradle ]]; then
             echo "ANDROID_PROJECT_DIR=android" >> "$GITHUB_ENV"
           elif [[ -f settings.gradle && -f app/build.gradle ]]; then
@@ -64,7 +87,7 @@ jobs:
 
           test -f app/src/main/res/layout/view_phisk_player.xml
           test -f app/src/main/java/co/phisk/videos/NativeSettingsActivity.java
-          test -f app/src/main/res/drawable-nodpi/ic_settings_user-hexagon.png
+          test -f app/src/main/res/drawable-nodpi/ic_settings_user_hexagon.png
           test -f app/src/main/res/drawable-nodpi/ic_settings_lock.png
           test -f app/src/main/res/drawable-nodpi/ic_settings_spy.png
 
