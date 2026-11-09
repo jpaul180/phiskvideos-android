@@ -1,4 +1,4 @@
-name: Build PhiskVideos Android v1.16.8 (Settings Icons)
+name: Build PhiskVideos Android v1.16.9 (App-wide Dark Mode)
 
 on:
   workflow_dispatch:
@@ -32,11 +32,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract v1.16.8 Settings Icons source archive
+      - name: Extract v1.16.9 App-wide Dark Mode source archive
         shell: bash
         run: |
           set -euo pipefail
-          ARCHIVE="PhiskVideos-Android-v1.16.8-Settings-Icons.zip"
+          ARCHIVE="PhiskVideos-Android-v1.16.9-App-Wide-Dark-Mode.zip"
           if [[ ! -f "$ARCHIVE" ]]; then
             echo "::error::Missing $ARCHIVE. Upload the updated source ZIP to the repository root."
             echo "Repository root files:"
@@ -79,7 +79,7 @@ jobs:
             exit 1
           fi
 
-      - name: Verify v1.16.8 Settings source
+      - name: Verify v1.16.9 App-wide Dark Mode source
         shell: bash
         run: |
           set -euo pipefail
@@ -87,6 +87,9 @@ jobs:
 
           test -f app/src/main/res/layout/view_phisk_player.xml
           test -f app/src/main/java/co/phisk/videos/NativeSettingsActivity.java
+          test -f app/src/main/java/co/phisk/videos/PhiskTheme.java
+          test -f app/src/main/res/values/styles.xml
+          test -f app/src/main/res/values/ids.xml
           test -f app/src/main/res/drawable-nodpi/ic_settings_user_hexagon.png
           test -f app/src/main/res/drawable-nodpi/ic_settings_user_edit.png
           test -f app/src/main/res/drawable-nodpi/ic_settings_lock.png
@@ -97,7 +100,7 @@ jobs:
 
           VERSION_NAME="$(sed -n "s/.*versionName '\([^']*\)'.*/\1/p" app/build.gradle | head -n1)"
           VERSION_CODE="$(sed -n "s/.*versionCode \([0-9][0-9]*\).*/\1/p" app/build.gradle | head -n1)"
-          [[ "$VERSION_NAME" == "1.16.8" ]] || { echo "::error::Expected Android version 1.16.8, found: $VERSION_NAME"; exit 1; }
+          [[ "$VERSION_NAME" == "1.16.9" ]] || { echo "::error::Expected Android version 1.16.9, found: $VERSION_NAME"; exit 1; }
           test -n "$VERSION_CODE"
 
           SETTINGS="app/src/main/java/co/phisk/videos/NativeSettingsActivity.java"
@@ -108,6 +111,26 @@ jobs:
           grep -q 'dark_mode' "$SETTINGS"
           grep -q 'confirmLogout' "$SETTINGS"
           grep -q 'app-auth/logout' "$SETTINGS"
+
+
+          # Verify persisted app-wide theme integration across native screens and WebView.
+          THEME="app/src/main/java/co/phisk/videos/PhiskTheme.java"
+          SETTINGS="app/src/main/java/co/phisk/videos/NativeSettingsActivity.java"
+          MAIN="app/src/main/java/co/phisk/videos/MainActivity.java"
+          grep -q 'dark_mode' "$THEME"
+          grep -q 'SharedPreferences' "$THEME"
+          grep -q 'AppTheme_Dark' "$THEME"
+          grep -q 'darkCss' "$THEME"
+          grep -q 'PhiskTheme.setDark' "$SETTINGS"
+          grep -q 'PhiskTheme.configureActivityTheme' "$MAIN"
+          grep -q 'PhiskTheme.apply(this)' "$MAIN"
+          for SCREEN in NativeHomeActivity NativeSearchActivity NativePlayerActivity NativeCreatorChannelActivity NativeCreatorStudioActivity NativeStoryCreateActivity NotificationCentreActivity DownloadsActivity OfflineVideoActivity NativeVideoUploadActivity NativeReportVideoActivity; do
+            FILE="app/src/main/java/co/phisk/videos/${SCREEN}.java"
+            if [[ -f "$FILE" ]]; then
+              grep -q 'PhiskTheme.configureActivityTheme' "$FILE" || { echo "::error::Missing theme setup in $SCREEN"; exit 1; }
+              grep -q 'PhiskTheme.apply(this)' "$FILE" || { echo "::error::Missing theme refresh in $SCREEN"; exit 1; }
+            fi
+          done
 
           ! grep -R -E 'PictureInPicture|enterPictureInPictureMode|supportsPictureInPicture|onUserLeaveHint|navigateWithMiniPlayer' \
             app/src/main/java/co/phisk/videos/NativePlayerActivity.java \
