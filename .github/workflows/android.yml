@@ -83,7 +83,13 @@ jobs:
       - name: Build release APK and AAB
         run: cd "$ANDROID_PROJECT_DIR" && gradle --no-daemon --stacktrace clean assembleRelease bundleRelease
       - name: Verify APK signature
-        run: cd "$ANDROID_PROJECT_DIR" && "$ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose app/build/outputs/apk/release/app-release.apk"
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$ANDROID_PROJECT_DIR"
+          APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify --verbose app/build/outputs/apk/release/app-release.apk
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.SOURCE_ARCHIVE }}-Build
