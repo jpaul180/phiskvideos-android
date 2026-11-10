@@ -109,7 +109,7 @@ jobs:
           g = Path("app/build.gradle")
           build = g.read_text()
           build, name_count = re.subn(r"versionName\s+'[^']+'", "versionName '1.19.1'", build, count=1)
-          build, code_count = re.subn(r"versionCode\s+\\d+", "versionCode 45", build, count=1)
+          build, code_count = re.subn(r"versionCode\s+\d+", "versionCode 45", build, count=1)
           if name_count != 1 or code_count != 1:
               raise SystemExit(f"Could not safely set release version (versionName matches={name_count}, versionCode matches={code_count}).")
           g.write_text(build)
