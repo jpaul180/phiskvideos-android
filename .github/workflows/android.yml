@@ -1,4 +1,4 @@
-name: Build PhiskVideos Android v1.18.1 (Native Onboarding)
+name: Build PhiskVideos Android v1.19.0 (Native Explore)
 
 on:
   workflow_dispatch:
@@ -32,11 +32,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract v1.18.0 Native Onboarding source archive
+      - name: Extract v1.19.0 Native Explore source archive
         shell: bash
         run: |
           set -euo pipefail
-          ARCHIVE="PhiskVideos-Android-v1.18.0-Native-Onboarding.zip"
+          ARCHIVE="PhiskVideos-Android-v1.19.0-Native-Explore.zip"
           if [[ ! -f "$ARCHIVE" ]]; then
             echo "::error::Missing $ARCHIVE. Upload the updated source ZIP to the repository root."
             echo "Repository root files:"
@@ -79,7 +79,7 @@ jobs:
             exit 1
           fi
 
-      - name: Apply v1.18.1 onboarding startup crash fix
+      - name: Apply v1.19.0 release version and retain startup crash fix
         shell: bash
         run: |
           set -euo pipefail
@@ -103,15 +103,15 @@ jobs:
           p.write_text(s.replace(old, new, 1))
           g = Path("app/build.gradle")
           build = g.read_text()
-          build = build.replace("versionName '1.18.0'", "versionName '1.18.1'", 1)
-          build = build.replace("versionCode 42", "versionCode 43", 1)
+          build = build.replace("versionName '1.19.0'", "versionName '1.19.0'", 1)
+          build = build.replace("versionCode 43", "versionCode 44", 1)
           g.write_text(build)
           PY
           grep -q 'if (web != null)' app/src/main/java/co/phisk/videos/MainActivity.java
-          grep -q "versionName '1.18.1'" app/build.gradle
-          grep -q 'versionCode 43' app/build.gradle
+          grep -q "versionName '1.19.0'" app/build.gradle
+          grep -q 'versionCode 44' app/build.gradle
 
-      - name: Verify v1.18.0 Native Onboarding source
+      - name: Verify v1.19.0 Native Explore source and preserved onboarding
         shell: bash
         run: |
           set -euo pipefail
@@ -136,7 +136,8 @@ jobs:
 
           VERSION_NAME="$(sed -n "s/.*versionName '\([^']*\)'.*/\1/p" app/build.gradle | head -n1)"
           VERSION_CODE="$(sed -n "s/.*versionCode \([0-9][0-9]*\).*/\1/p" app/build.gradle | head -n1)"
-          [[ "$VERSION_NAME" == "1.18.1" ]] || { echo "::error::Expected Android version 1.18.1, found: $VERSION_NAME"; exit 1; }
+          [[ "$VERSION_NAME" == "1.19.0" ]] || { echo "::error::Expected Android version 1.19.0, found: $VERSION_NAME"; exit 1; }
+          [[ "$VERSION_CODE" == "44" ]] || { echo "::error::Expected Android versionCode 44, found: $VERSION_CODE"; exit 1; }
           test -n "$VERSION_CODE"
 
           SETTINGS="app/src/main/java/co/phisk/videos/NativeSettingsActivity.java"
@@ -188,8 +189,8 @@ jobs:
           grep -q 'decodeTitle' "$STUDIO"
           ! grep -q 'Upload video' "$STUDIO"
           ! grep -q 'Write a Story' "$STUDIO"
-          grep -q 'versionName '\''1.18.1'\''' app/build.gradle
-          grep -q 'versionCode 43' app/build.gradle
+          grep -q 'versionName '\''1.19.0'\''' app/build.gradle
+          grep -q 'versionCode 44' app/build.gradle
 
           # Native onboarding v1.18.0: verify the three approved onboarding
           # experiences are present in the extracted Android source/resources.
@@ -202,6 +203,25 @@ jobs:
           grep -R -F -q "Create Your Channel" "$ONBOARDING_ROOT"
           grep -R -F -q "Get Started" "$ONBOARDING_ROOT"
 
+
+          # Native Explore v1.19.0: dynamic configuration, section feeds,
+          # category detail screen, navigation ordering, and fixed carousel cards.
+          HOME="app/src/main/java/co/phisk/videos/NativeHomeActivity.java"
+          CATEGORY="app/src/main/java/co/phisk/videos/NativeCategoryActivity.java"
+          test -f "$HOME"
+          test -f "$CATEGORY"
+          grep -q '"Explore","For You"' "$HOME"
+          grep -q 'explore/config' "$HOME"
+          grep -q 'explore/sections/' "$HOME"
+          grep -q 'NativeCategoryActivity.class' "$HOME"
+          grep -q 'thumbnail_url' "$HOME"
+          grep -q 'avatar_url' "$HOME"
+          grep -q 'Views' "$HOME"
+          grep -q 'setMaxLines(2)' "$HOME"
+          grep -q 'TextUtils.TruncateAt.END' "$HOME"
+          grep -q 'categories/' "$CATEGORY"
+          grep -q 'per_page=10' "$CATEGORY"
+          grep -q 'NativeCategoryActivity' app/src/main/AndroidManifest.xml
 
           # Verify persisted app-wide theme integration across native screens and WebView.
           THEME="app/src/main/java/co/phisk/videos/PhiskTheme.java"
