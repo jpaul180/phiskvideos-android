@@ -1,4 +1,4 @@
-name: Build PhiskVideos Android v1.17.1 (Profile Image & Public Username)
+name: Build PhiskVideos Android v1.17.2 (Creator Studio Polish)
 
 on:
   workflow_dispatch:
@@ -32,11 +32,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract v1.17.1 Profile Image & Public Username source archive
+      - name: Extract v1.17.2 Creator Studio Polish source archive
         shell: bash
         run: |
           set -euo pipefail
-          ARCHIVE="PhiskVideos-Android-v1.17.1-Profile-Image-Public-Username.zip"
+          ARCHIVE="PhiskVideos-Android-v1.17.2-Creator-Studio-Polish.zip"
           if [[ ! -f "$ARCHIVE" ]]; then
             echo "::error::Missing $ARCHIVE. Upload the updated source ZIP to the repository root."
             echo "Repository root files:"
@@ -79,7 +79,7 @@ jobs:
             exit 1
           fi
 
-      - name: Verify v1.17.1 Profile Image & Public Username source
+      - name: Verify v1.17.2 Creator Studio Polish source
         shell: bash
         run: |
           set -euo pipefail
@@ -104,7 +104,7 @@ jobs:
 
           VERSION_NAME="$(sed -n "s/.*versionName '\([^']*\)'.*/\1/p" app/build.gradle | head -n1)"
           VERSION_CODE="$(sed -n "s/.*versionCode \([0-9][0-9]*\).*/\1/p" app/build.gradle | head -n1)"
-          [[ "$VERSION_NAME" == "1.17.1" ]] || { echo "::error::Expected Android version 1.17.1, found: $VERSION_NAME"; exit 1; }
+          [[ "$VERSION_NAME" == "1.17.2" ]] || { echo "::error::Expected Android version 1.17.2, found: $VERSION_NAME"; exit 1; }
           test -n "$VERSION_CODE"
 
           SETTINGS="app/src/main/java/co/phisk/videos/NativeSettingsActivity.java"
@@ -136,6 +136,28 @@ jobs:
           grep -q 'phone_number' "$ACCOUNT"
 
           grep -q 'a.optString("username"' app/src/main/java/co/phisk/videos/NativeSettingsActivity.java
+
+          # Creator Studio v1.17.2: dashboard shortcuts removed, selection states,
+          # chart entrance animation and rounded bar tops, HTML title decoding,
+          # and channel-less users routed to native channel creation.
+          STUDIO="app/src/main/java/co/phisk/videos/NativeCreatorStudioActivity.java"
+          test -f "$STUDIO"
+          grep -q 'creator-channel' "$STUDIO"
+          grep -q 'NativeCreatorChannelEditorActivity.class' "$STUDIO"
+          grep -q 'REQUEST_CREATE_CHANNEL' "$STUDIO"
+          grep -q 'addChoice' "$STUDIO"
+          grep -q 'updateChoices' "$STUDIO"
+          grep -q 'styleChoice' "$STUDIO"
+          grep -q 'animateBars' "$STUDIO"
+          grep -q 'maybeAnimateChart' "$STUDIO"
+          grep -q 'ValueAnimator.ofFloat(0f,1f)' "$STUDIO"
+          grep -q 'quadTo(x,y,x+radius,y)' "$STUDIO"
+          grep -q 'Html.fromHtml' "$STUDIO"
+          grep -q 'decodeTitle' "$STUDIO"
+          ! grep -q 'Upload video' "$STUDIO"
+          ! grep -q 'Write a Story' "$STUDIO"
+          grep -q 'versionName '\''1.17.2'\''' app/build.gradle
+          grep -q 'versionCode 41' app/build.gradle
 
 
           # Verify persisted app-wide theme integration across native screens and WebView.
