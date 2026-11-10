@@ -1,4 +1,4 @@
-name: Build PhiskVideos Android v1.20.1 (Native Password & Security)
+name: Build PhiskVideos Android v1.20.1 (Homepage Explore Polish)
 
 on:
   workflow_dispatch:
@@ -32,7 +32,7 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract v1.20.1 Native Password & Security source archive
+      - name: Extract v1.20.1 Homepage Explore Polish source archive
         shell: bash
         run: |
           set -euo pipefail
@@ -117,7 +117,7 @@ jobs:
           grep -q "versionName '1.20.1'" app/build.gradle
           grep -q 'versionCode 47' app/build.gradle
 
-      - name: Verify v1.20.1 Native Password & Security and preserved app functionality
+      - name: Verify v1.20.1 Homepage Explore Polish and preserved app functionality
         shell: bash
         run: |
           set -euo pipefail
