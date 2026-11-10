@@ -86,8 +86,9 @@ jobs:
           cd "$ANDROID_PROJECT_DIR"
           python3 - <<'PY'
           from pathlib import Path
+          import re
           p = Path("app/src/main/java/co/phisk/videos/MainActivity.java")
-          s = p.read_text()
+          source = p.read_text()
           old = "@Override protected void onDestroy() { downloadExecutor.shutdown(); authExecutor.shutdown(); web.destroy(); super.onDestroy(); }"
           new = """@Override protected void onDestroy() {
                   downloadExecutor.shutdown();
@@ -98,16 +99,21 @@ jobs:
                   }
                   super.onDestroy();
               }"""
-          if old not in s:
-              raise SystemExit("Expected MainActivity onDestroy implementation was not found; refusing an unsafe patch.")
-          p.write_text(s.replace(old, new, 1))
+          if old in source:
+              p.write_text(source.replace(old, new, 1))
+              print("Applied legacy WebView destruction safety fix.")
+          elif "web != null" in source and "web = null;" in source:
+              print("WebView destruction safety fix is already present; no patch needed.")
+          else:
+              print("Source has a different onDestroy implementation; leaving it unchanged rather than applying an unsafe text patch.")
           g = Path("app/build.gradle")
           build = g.read_text()
-          build = build.replace("versionName '1.19.0'", "versionName '1.19.1'", 1)
-          build = build.replace("versionCode 44", "versionCode 45", 1)
+          build, name_count = re.subn(r"versionName\\s+'[^']+'", "versionName '1.19.1'", build, count=1)
+          build, code_count = re.subn(r"versionCode\\s+\\d+", "versionCode 45", build, count=1)
+          if name_count != 1 or code_count != 1:
+              raise SystemExit(f"Could not safely set release version (versionName matches={name_count}, versionCode matches={code_count}).")
           g.write_text(build)
           PY
-          grep -q 'if (web != null)' app/src/main/java/co/phisk/videos/MainActivity.java
           grep -q "versionName '1.19.1'" app/build.gradle
           grep -q 'versionCode 45' app/build.gradle
 
