@@ -1,4 +1,4 @@
-name: Build PhiskVideos Android v1.18.0 (Native Onboarding)
+name: Build PhiskVideos Android v1.18.1 (Native Onboarding)
 
 on:
   workflow_dispatch:
@@ -79,6 +79,38 @@ jobs:
             exit 1
           fi
 
+      - name: Apply v1.18.1 onboarding startup crash fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$ANDROID_PROJECT_DIR"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("app/src/main/java/co/phisk/videos/MainActivity.java")
+          s = p.read_text()
+          old = "@Override protected void onDestroy() { downloadExecutor.shutdown(); authExecutor.shutdown(); web.destroy(); super.onDestroy(); }"
+          new = """@Override protected void onDestroy() {
+                  downloadExecutor.shutdown();
+                  authExecutor.shutdown();
+                  if (web != null) {
+                      web.destroy();
+                      web = null;
+                  }
+                  super.onDestroy();
+              }"""
+          if old not in s:
+              raise SystemExit("Expected MainActivity onDestroy implementation was not found; refusing an unsafe patch.")
+          p.write_text(s.replace(old, new, 1))
+          g = Path("app/build.gradle")
+          build = g.read_text()
+          build = build.replace("versionName '1.18.0'", "versionName '1.18.1'", 1)
+          build = build.replace("versionCode 42", "versionCode 43", 1)
+          g.write_text(build)
+          PY
+          grep -q 'if (web != null)' app/src/main/java/co/phisk/videos/MainActivity.java
+          grep -q "versionName '1.18.1'" app/build.gradle
+          grep -q 'versionCode 43' app/build.gradle
+
       - name: Verify v1.18.0 Native Onboarding source
         shell: bash
         run: |
@@ -156,8 +188,8 @@ jobs:
           grep -q 'decodeTitle' "$STUDIO"
           ! grep -q 'Upload video' "$STUDIO"
           ! grep -q 'Write a Story' "$STUDIO"
-          grep -q 'versionName '\''1.18.0'\''' app/build.gradle
-          grep -q 'versionCode 42' app/build.gradle
+          grep -q 'versionName '\''1.18.1'\''' app/build.gradle
+          grep -q 'versionCode 43' app/build.gradle
 
           # Native onboarding v1.18.0: verify the three approved onboarding
           # experiences are present in the extracted Android source/resources.
