@@ -113,6 +113,15 @@ jobs:
           if name_count != 1 or code_count != 1:
               raise SystemExit(f"Could not safely set release version (versionName matches={name_count}, versionCode matches={code_count}).")
           g.write_text(build)
+          # Repair a literal escaped newline accidentally embedded between
+          # lifecycle overrides in the uploaded NativeHomeActivity source.
+          home = Path("app/src/main/java/co/phisk/videos/NativeHomeActivity.java")
+          if home.exists():
+              text = home.read_text()
+              repaired = text.replace(r"}\n    @Override", "}\n    @Override")
+              if repaired != text:
+                  home.write_text(repaired)
+                  print("Repaired escaped newline between NativeHomeActivity lifecycle methods.")
           PY
           grep -q "versionName '1.23.0'" app/build.gradle
           grep -q 'versionCode 53' app/build.gradle
