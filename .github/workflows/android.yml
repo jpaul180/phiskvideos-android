@@ -1,4 +1,4 @@
-name: Build PhiskVideos Android v1.20.2 (Search Watch Polish)
+name: Build PhiskVideos Android v1.20.3 (Skeleton Search Focus Fix)
 
 on:
   workflow_dispatch:
@@ -32,11 +32,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract v1.20.2 Search Watch Polish source archive
+      - name: Extract v1.20.3 Skeleton Search Focus Fix source archive
         shell: bash
         run: |
           set -euo pipefail
-          ARCHIVE="PhiskVideos_Android_v1.20.2_Search_Watch_Polish.zip"
+          ARCHIVE="PhiskVideos_Android_v1.20.3_Skeleton_Search_Focus_Fix.zip"
           if [[ ! -f "$ARCHIVE" ]]; then
             echo "::error::Missing $ARCHIVE. Upload the updated source ZIP to the repository root."
             echo "Repository root files:"
@@ -79,7 +79,7 @@ jobs:
             exit 1
           fi
 
-      - name: Apply v1.20.2 release version and retain startup crash fix
+      - name: Apply v1.20.3 release version and retain startup crash fix
         shell: bash
         run: |
           set -euo pipefail
@@ -108,16 +108,16 @@ jobs:
               print("Source has a different onDestroy implementation; leaving it unchanged rather than applying an unsafe text patch.")
           g = Path("app/build.gradle")
           build = g.read_text()
-          build, name_count = re.subn(r"versionName\s+'[^']+'", "versionName '1.20.2'", build, count=1)
-          build, code_count = re.subn(r"versionCode\s+\d+", "versionCode 48", build, count=1)
+          build, name_count = re.subn(r"versionName\s+'[^']+'", "versionName '1.20.3'", build, count=1)
+          build, code_count = re.subn(r"versionCode\s+\d+", "versionCode 49", build, count=1)
           if name_count != 1 or code_count != 1:
               raise SystemExit(f"Could not safely set release version (versionName matches={name_count}, versionCode matches={code_count}).")
           g.write_text(build)
           PY
-          grep -q "versionName '1.20.2'" app/build.gradle
-          grep -q 'versionCode 48' app/build.gradle
+          grep -q "versionName '1.20.3'" app/build.gradle
+          grep -q 'versionCode 49' app/build.gradle
 
-      - name: Verify v1.20.2 Search Watch Polish and preserved app functionality
+      - name: Verify v1.20.3 Skeleton Search Focus Fix and preserved app functionality
         shell: bash
         run: |
           set -euo pipefail
@@ -142,8 +142,8 @@ jobs:
 
           VERSION_NAME="$(sed -n "s/.*versionName '\([^']*\)'.*/\1/p" app/build.gradle | head -n1)"
           VERSION_CODE="$(sed -n "s/.*versionCode \([0-9][0-9]*\).*/\1/p" app/build.gradle | head -n1)"
-          [[ "$VERSION_NAME" == "1.20.2" ]] || { echo "::error::Expected Android version 1.20.2, found: $VERSION_NAME"; exit 1; }
-          [[ "$VERSION_CODE" == "48" ]] || { echo "::error::Expected Android versionCode 48, found: $VERSION_CODE"; exit 1; }
+          [[ "$VERSION_NAME" == "1.20.2" ]] || { echo "::error::Expected Android version 1.20.3, found: $VERSION_NAME"; exit 1; }
+          [[ "$VERSION_CODE" == "48" ]] || { echo "::error::Expected Android versionCode 49, found: $VERSION_CODE"; exit 1; }
           test -n "$VERSION_CODE"
 
           SETTINGS="app/src/main/java/co/phisk/videos/NativeSettingsActivity.java"
@@ -195,8 +195,8 @@ jobs:
           grep -q 'decodeTitle' "$STUDIO"
           ! grep -q 'Upload video' "$STUDIO"
           ! grep -q 'Write a Story' "$STUDIO"
-          grep -q 'versionName '\''1.20.2'\''' app/build.gradle
-          grep -q 'versionCode 48' app/build.gradle
+          grep -q 'versionName '\''1.20.3'\''' app/build.gradle
+          grep -q 'versionCode 49' app/build.gradle
 
           # Native onboarding v1.18.0: verify the three approved onboarding
           # experiences are present in the extracted Android source/resources.
@@ -261,6 +261,17 @@ jobs:
           grep -q 'AlphaAnimation' "$WATCH"
           grep -q 'BORDER=Color.rgb(232,233,238)' "$WATCH"
           grep -q 'SKELETON=Color.rgb(238,239,243)' "$WATCH"
+
+          # v1.20.3 maintenance: stop/remove skeleton animations on content replacement
+          # and prevent Explore search autofocus/keyboard popup on initial launch.
+          grep -q 'stopSkeletonAnimations' "$HOME"
+          grep -q 'stopSkeletonAnimations(feedList)' "$HOME"
+          grep -q 'search.clearFocus()' "$HOME"
+          grep -q 'SOFT_INPUT_STATE_ALWAYS_HIDDEN' "$HOME"
+          grep -q 'root.requestFocus()' "$HOME"
+          grep -q 'stopSkeletonAnimations' "$WATCH"
+          grep -q 'stopSkeletonAnimations(content)' "$WATCH"
+          grep -q 'stopSkeletonAnimations(content);content.removeAllViews()' "$WATCH"
 
           # Native Password & Security v1.20.1: ensure the website's Privacy & Security
           # functionality is available through the native app destination.
