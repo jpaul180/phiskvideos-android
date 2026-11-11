@@ -36,7 +36,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ARCHIVE="PhiskVideos_Android_v1.21.0_Upload_Studio_Skeleton_Polish.zip"
+          ARCHIVE="PhiskVideos-Android-v1.21.0-Native-Phisk-Collections.zip"
           if [[ ! -f "$ARCHIVE" ]]; then
             echo "::error::Missing $ARCHIVE. Upload the updated source ZIP to the repository root."
             echo "Repository root files:"
