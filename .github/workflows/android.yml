@@ -195,7 +195,7 @@ jobs:
           grep -q 'decodeTitle' "$STUDIO"
           ! grep -q 'Upload video' "$STUDIO"
           ! grep -q 'Write a Story' "$STUDIO"
-          grep -q 'versionName '\''1.20.1'\''' app/build.gradle
+          grep -q 'versionName '\''1.20.2'\''' app/build.gradle
           grep -q 'versionCode 48' app/build.gradle
 
           # Native onboarding v1.18.0: verify the three approved onboarding
