@@ -332,8 +332,9 @@ jobs:
           grep -q 'versionName '\''1.22.0'\''' app/build.gradle
           grep -q 'versionCode 52' app/build.gradle
 
-          # Native Phisk Collections v1.22.0: editorial API integration, carousel,
-          # five-layer stack, draggable gray indicator, detail screen and manifest registration.
+          # Native Phisk Collections v1.22.0: editorial API integration, cinematic cover,
+          # filmstrip previews (no overlapping stack), draggable gray indicator,
+          # detail screen and manifest registration.
           COLLECTIONS="app/src/main/java/co/phisk/videos/NativeCollectionActivity.java"
           test -f "$COLLECTIONS"
           grep -q 'NativeCollectionActivity' app/src/main/AndroidManifest.xml
@@ -345,6 +346,8 @@ jobs:
           grep -q 'collection_id' "$HOME"
           grep -q 'AlphaAnimation' "$HOME"
           grep -q 'collectionSkeleton' "$HOME"
+          grep -q 'Filmstrip previews replace the old overlapping stack' "$HOME"
+          grep -q 'video_thumbnails' "$HOME"
           grep -q 'indicator.setOnTouchListener' "$HOME"
           grep -q 'collectionBorder' "$HOME"
           grep -q 'collections/' "$COLLECTIONS"
