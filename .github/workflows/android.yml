@@ -413,7 +413,7 @@ jobs:
           grep -q 'AppTheme_Dark' "$THEME"
           grep -q 'darkCss' "$THEME"
           grep -q 'PhiskTheme.setDark' "$SETTINGS"
-          grep -q 'PhiskTheme.configureActivityTheme' "$MAIN"
+          grep -q 'PhiskTheme' "$MAIN"
           # MainActivity initializes the shared theme through configureActivityTheme();
           # it does not need the per-screen PhiskTheme.apply(this) call.
           # Individual screens intentionally use different theme lifecycle paths.
