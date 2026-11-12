@@ -36,7 +36,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ARCHIVE="PhiskVideos-Android-v1.23.4-Explore-Hero-Inset.zip"
+          ARCHIVE="PhiskVideos-Android-v1.23.4-Explore-Hero-Rounded-Corners.zip"
           if [[ ! -f "$ARCHIVE" ]]; then
             echo "::error::Missing $ARCHIVE. Upload the updated source ZIP to the repository root."
             echo "Repository root files:"
@@ -389,6 +389,9 @@ jobs:
           grep -q 'canvas.clipPath(clip)' "$HOME"
           grep -q 'canvas.drawRoundRect(rect,radius,radius,outline)' "$HOME"
           grep -q 'outline.setColor(VIOLET)' "$HOME"
+          # Rounded black container background prevents square corners showing
+          # beyond the rounded child clipping and violet outline.
+          grep -Fq 'collectionHero.setBackground(shape(Color.BLACK,0,8))' "$HOME"
           grep -q 'collectionTitleView' "$HOME"
           grep -q 'collectionSubtitleView' "$HOME"
           grep -q 'collectionCount' "$HOME"
