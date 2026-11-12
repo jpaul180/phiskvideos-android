@@ -48,8 +48,24 @@ jobs:
 
           # Android resource filenames cannot contain hyphens. Normalize any
           # supplied resource filenames and their source-code references.
-          PROJECT_ROOT="."
-          if [[ -d android/app/src/main/res ]]; then PROJECT_ROOT="android"; fi
+          # Locate the Gradle project inside the uploaded ZIP. Archives may
+          # contain a wrapper folder (for example phisk234/) rather than
+          # placing settings.gradle at the repository root.
+          PROJECT_ROOT=""
+          while IFS= read -r SETTINGS; do
+            CANDIDATE="$(dirname "$SETTINGS")"
+            if [[ -f "$CANDIDATE/app/build.gradle" || -f "$CANDIDATE/app/build.gradle.kts" ]]; then
+              PROJECT_ROOT="$CANDIDATE"
+              break
+            fi
+          done < <(find . -mindepth 1 -maxdepth 6 -type f \( -name settings.gradle -o -name settings.gradle.kts \) -not -path './.git/*' | sort)
+
+          if [[ -z "$PROJECT_ROOT" ]]; then
+            echo "::error::Could not find settings.gradle and app/build.gradle in the extracted source archive."
+            find . -maxdepth 7 \( -name settings.gradle -o -name settings.gradle.kts -o -path '*/app/build.gradle' -o -path '*/app/build.gradle.kts' \) -print
+            exit 1
+          fi
+          echo "Detected Android Gradle project at: $PROJECT_ROOT"
           RES_DIR="$PROJECT_ROOT/app/src/main/res"
           if [[ -d "$RES_DIR" ]]; then
             while IFS= read -r -d '' FILE; do
@@ -69,15 +85,7 @@ jobs:
             done < <(find "$RES_DIR" -type f -name '*-*' -print0)
           fi
 
-          if [[ -f android/settings.gradle && -f android/app/build.gradle ]]; then
-            echo "ANDROID_PROJECT_DIR=android" >> "$GITHUB_ENV"
-          elif [[ -f settings.gradle && -f app/build.gradle ]]; then
-            echo "ANDROID_PROJECT_DIR=." >> "$GITHUB_ENV"
-          else
-            echo "::error::Could not locate the Android Gradle project after extracting $ARCHIVE."
-            find . -maxdepth 4 \( -name settings.gradle -o -name build.gradle \) -print
-            exit 1
-          fi
+          echo "ANDROID_PROJECT_DIR=$PROJECT_ROOT" >> "$GITHUB_ENV"
 
       - name: Apply v1.23.4 release version and retain startup crash fix
         shell: bash
