@@ -124,6 +124,32 @@ jobs:
               if repaired != text:
                   home.write_text(repaired)
                   print("Repaired escaped newline between NativeHomeActivity lifecycle methods.")
+              if "private void showFeedSkeleton()" not in repaired:
+                  marker = "    private void loadExplore(){"
+                  method = """    // Feed-tab loading state: restrained skeleton cards matching Explore.
+              private void showFeedSkeleton(){
+                  stopSkeletonAnimations(feedList);feedList.removeAllViews();
+                  for(int i=0;i<3;i++){
+                      LinearLayout card=new LinearLayout(this);card.setOrientation(LinearLayout.VERTICAL);
+                      card.setPadding(dp(10),dp(10),dp(10),dp(12));card.setBackground(shape(cardSurface(),BORDER,8));
+                      LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(-1,-2);cp.bottomMargin=dp(14);feedList.addView(card,cp);
+                      card.addView(skeletonBlock(-1,205,6));
+                      View title=skeletonBlock(190,14,4);LinearLayout.LayoutParams tp=(LinearLayout.LayoutParams)title.getLayoutParams();tp.topMargin=dp(13);card.addView(title,tp);
+                      View meta=skeletonBlock(125,10,4);LinearLayout.LayoutParams mp=(LinearLayout.LayoutParams)meta.getLayoutParams();mp.topMargin=dp(9);card.addView(meta,mp);
+                  }
+              }
+          """
+                  if marker not in repaired:
+                      raise SystemExit("Cannot safely insert missing showFeedSkeleton() method.")
+                  repaired = repaired.replace(marker, method + marker, 1)
+                  home.write_text(repaired)
+                  print("Added missing NativeHomeActivity.showFeedSkeleton() implementation.")
+              else:
+                  print("NativeHomeActivity.showFeedSkeleton() already exists.")
+              updated = home.read_text()
+              updated = updated.replace("private void renderItems(int index){feedList.removeAllViews();", "private void renderItems(int index){stopSkeletonAnimations(feedList);feedList.removeAllViews();")
+              updated = updated.replace("private void showError(int index,String message){feedList.removeAllViews();", "private void showError(int index,String message){stopSkeletonAnimations(feedList);feedList.removeAllViews();")
+              home.write_text(updated)
           PY
           grep -q "versionName '1.23.4'" app/build.gradle
           grep -q 'versionCode 57' app/build.gradle
@@ -275,6 +301,7 @@ jobs:
 
           # v1.23.4 maintenance: stop/remove skeleton animations on content replacement
           # and prevent Explore search autofocus/keyboard popup on initial launch.
+          grep -q 'showFeedSkeleton' "$HOME"
           grep -q 'stopSkeletonAnimations' "$HOME"
           grep -q 'stopSkeletonAnimations(feedList)' "$HOME"
           grep -q 'search.clearFocus()' "$HOME"
