@@ -388,7 +388,7 @@ jobs:
 
           # Reject active legacy PiP entry points, but do not fail on harmless
           # mentions in comments or documentation.
-          if grep -R -n -E 'enterPictureInPictureMode[[:space:]]*\\(|supportsPictureInPicture[[:space:]]*=|onUserLeaveHint[[:space:]]*\\(|navigateWithMiniPlayer[[:space:]]*\\(' \
+          if grep -R -n -E 'enterPictureInPictureMode[[:space:]]*\(|supportsPictureInPicture[[:space:]]*=|onUserLeaveHint[[:space:]]*\(|navigateWithMiniPlayer[[:space:]]*\(' \
             app/src/main/java/co/phisk/videos/NativePlayerActivity.java \
             app/src/main/java/co/phisk/videos/OfflineVideoActivity.java \
             app/src/main/AndroidManifest.xml; then
