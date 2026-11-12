@@ -240,7 +240,7 @@ jobs:
           grep -q 'decodeTitle' "$STUDIO"
           ! grep -q 'Upload video' "$STUDIO"
           ! grep -q 'Write a Story' "$STUDIO"
-          grep -q 'versionName '\''1.23.4'\''' app/build.gradle
+          grep -q 'versionName '\''1.24.0'\''' app/build.gradle
           grep -q 'versionCode 58' app/build.gradle
 
           # Native onboarding v1.18.0: verify the three approved onboarding
@@ -325,7 +325,7 @@ jobs:
           grep -q 'BORDER=Color.rgb(232,233,238)' "$WATCH"
           grep -q 'SKELETON=Color.rgb(238,239,243)' "$WATCH"
 
-          # v1.23.4 maintenance: stop/remove skeleton animations on content replacement
+          # v1.24.0 maintenance: stop/remove skeleton animations on content replacement
           # and prevent Explore search autofocus/keyboard popup on initial launch.
           grep -q 'showFeedSkeleton' "$HOME"
           grep -q 'stopSkeletonAnimations' "$HOME"
@@ -337,7 +337,7 @@ jobs:
           grep -q 'stopSkeletonAnimations(content)' "$WATCH"
           grep -q 'stopSkeletonAnimations(content);content.removeAllViews()' "$WATCH"
 
-          # Native Upload + Creator Studio v1.23.4: elegant skeleton loading,
+          # Native Upload + Creator Studio v1.24.0: elegant skeleton loading,
           # matching homepage skeleton/border palette, lifecycle cleanup, and dividers.
           UPLOAD="app/src/main/java/co/phisk/videos/NativeVideoUploadActivity.java"
           STUDIO="app/src/main/java/co/phisk/videos/NativeCreatorStudioActivity.java"
@@ -362,7 +362,7 @@ jobs:
           grep -q 'private void section' "$STUDIO"
           grep -q 'onDestroy()' "$STUDIO"
 
-          grep -q 'versionName '\''1.23.4'\''' app/build.gradle
+          grep -q 'versionName '\''1.24.0'\''' app/build.gradle
           grep -q 'versionCode 58' app/build.gradle
 
           # Native Password & Security v1.20.1: ensure the website's Privacy & Security
@@ -384,7 +384,7 @@ jobs:
           grep -q 'PhiskTheme.configureActivityTheme(this)' "$PASSWORD_SECURITY"
           grep -q 'PhiskTheme.isDark(this)' "$PASSWORD_SECURITY"
 
-          # Native Phisk editorial slider v1.23.4: full-width 16:9 hero,
+          # Native Phisk editorial slider v1.24.0: full-width 16:9 hero,
           # transparent-to-black gradient, title/count overlay, violet dots,
           # swipe/dot navigation, crossfade, 6.5s auto-advance and lifecycle pause.
           COLLECTIONS="app/src/main/java/co/phisk/videos/NativeCollectionActivity.java"
@@ -427,7 +427,7 @@ jobs:
           grep -q 'videos' "$COLLECTIONS"
           grep -q 'position' "$COLLECTIONS"
           grep -q 'NativePlayerActivity' "$COLLECTIONS"
-          grep -q 'versionName '\''1.23.4'\''' app/build.gradle
+          grep -q 'versionName '\''1.24.0'\''' app/build.gradle
           grep -q 'versionCode 58' app/build.gradle
 
           # Verify persisted app-wide theme integration across native screens and WebView.
