@@ -1,4 +1,4 @@
-name: Build PhiskVideos Android v1.23.4 (Editorial Collection Slider)
+name: Build PhiskVideos Android v1.23.4 (Explore UI Refinement)
 
 on:
   workflow_dispatch:
@@ -32,11 +32,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract v1.23.4 Native Phisk Collections source archive
+      - name: Extract latest v1.23.4 Explore UI Refinement source archive
         shell: bash
         run: |
           set -euo pipefail
-          ARCHIVE="PhiskVideos-Android-v1.23.4-Explore-UI-Refinement.zip"
+          ARCHIVE="PhiskVideos-Android-v1.23.4-Explore-UI-Refinement-Fixed.zip"
           if [[ ! -f "$ARCHIVE" ]]; then
             echo "::error::Missing $ARCHIVE. Upload the updated source ZIP to the repository root."
             echo "Repository root files:"
