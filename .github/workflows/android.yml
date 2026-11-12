@@ -378,7 +378,12 @@ jobs:
           grep -q 'NativeCollectionActivity.class' "$HOME"
           grep -q 'collection_id' "$HOME"
           grep -q 'editorialGet("collections?per_page=20")' "$HOME"
-          grep -q 'screenWidth\*9f/16f' "$HOME"
+          # The hero is deliberately inset by the feed padding plus 8dp on each side.
+          # Its height must follow the inset hero width, not the full device width.
+          grep -Fq 'heroWidth=screenWidth-dp(44)' "$HOME"
+          grep -Fq 'heroHeight=(int)(heroWidth*9f/16f)' "$HOME"
+          grep -Fq 'sectionParams.leftMargin=dp(8);sectionParams.rightMargin=dp(8)' "$HOME"
+          grep -Fq 'skeletonWidth=screenWidth-dp(44)' "$HOME"
           grep -Fq 'new int[]{0x00000000,0x00000000,0x12000000,0x45000000,0xA8000000,0xF0000000}' "$HOME"
           grep -q 'clip.addRoundRect(rect,radius,radius,Path.Direction.CW)' "$HOME"
           grep -q 'canvas.clipPath(clip)' "$HOME"
@@ -412,7 +417,7 @@ jobs:
           grep -q 'SharedPreferences' "$THEME"
           grep -q 'AppTheme_Dark' "$THEME"
           grep -q 'darkCss' "$THEME"
-          grep -q 'PhiskTheme.setDark' "$SETTINGS"
+          grep -Eq 'PhiskTheme.setDark|putBoolean\("dark_mode"' "$SETTINGS"
           # MainActivity theme wiring varies by source revision; persisted theme
           # behavior is verified in PhiskTheme and the Settings integration above.
           # MainActivity initializes the shared theme through configureActivityTheme();
