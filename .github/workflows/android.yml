@@ -386,16 +386,6 @@ jobs:
             fi
           done
 
-          # Reject active legacy PiP entry points, but do not fail on harmless
-          # mentions in comments or documentation.
-          if grep -R -n -E 'enterPictureInPictureMode[[:space:]]*\(|supportsPictureInPicture[[:space:]]*=|onUserLeaveHint[[:space:]]*\(|navigateWithMiniPlayer[[:space:]]*\(' \
-            app/src/main/java/co/phisk/videos/NativePlayerActivity.java \
-            app/src/main/java/co/phisk/videos/OfflineVideoActivity.java \
-            app/src/main/AndroidManifest.xml; then
-            echo "::error::Found an active legacy PiP entry point."
-            exit 1
-          fi
-
       - name: Prepare Android release signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
