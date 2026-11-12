@@ -82,7 +82,9 @@ jobs:
       - name: Apply v1.23.4 release version and retain startup crash fix
         shell: bash
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
+          trap 'status=$?; echo "::error::Verification failed at line $LINENO: $BASH_COMMAND (exit $status)"; exit "$status"' ERR
+          set -x
           cd "$ANDROID_PROJECT_DIR"
           python3 - <<'PY'
           from pathlib import Path
