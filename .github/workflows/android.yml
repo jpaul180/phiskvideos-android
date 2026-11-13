@@ -1,4 +1,4 @@
-name: Build PhiskVideos Android v1.24.4 (Channel Visual Polish)
+name: Build PhiskVideos Android v1.24.5 (Channel Visual Polish)
 
 on:
   workflow_dispatch:
@@ -32,11 +32,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract v1.24.4 Channel Visual Polish source archive
+      - name: Extract v1.24.5 Channel Visual Polish source archive
         shell: bash
         run: |
           set -euo pipefail
-          ARCHIVE="PhiskVideos-Android-v1.24.4-Channel-Visual-Polish-Dark-Gray-Icons.zip"
+          ARCHIVE="PhiskVideos-Android-v1.24.5-Channel-Visual-Polish-Dark-Gray-Icons.zip"
           if [[ ! -f "$ARCHIVE" ]]; then
             echo "::error::Missing $ARCHIVE. Upload the updated source ZIP to the repository root."
             echo "Repository root files:"
@@ -87,7 +87,7 @@ jobs:
 
           echo "ANDROID_PROJECT_DIR=$PROJECT_ROOT" >> "$GITHUB_ENV"
 
-      - name: Apply v1.24.4 release version and retain startup crash fix
+      - name: Apply v1.24.5 release version and retain startup crash fix
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -118,8 +118,8 @@ jobs:
               print("Source has a different onDestroy implementation; leaving it unchanged rather than applying an unsafe text patch.")
           g = Path("app/build.gradle")
           build = g.read_text()
-          build, name_count = re.subn(r"versionName\s+'[^']+'", "versionName '1.24.4'", build, count=1)
-          build, code_count = re.subn(r"versionCode\s+\d+", "versionCode 62", build, count=1)
+          build, name_count = re.subn(r"versionName\s+'[^']+'", "versionName '1.24.5'", build, count=1)
+          build, code_count = re.subn(r"versionCode\s+\d+", "versionCode 63", build, count=1)
           if name_count != 1 or code_count != 1:
               raise SystemExit(f"Could not safely set release version (versionName matches={name_count}, versionCode matches={code_count}).")
           g.write_text(build)
@@ -159,10 +159,10 @@ jobs:
               updated = updated.replace("private void showError(int index,String message){feedList.removeAllViews();", "private void showError(int index,String message){stopSkeletonAnimations(feedList);feedList.removeAllViews();")
               home.write_text(updated)
           PY
-          grep -q "versionName '1.24.4'" app/build.gradle
-          grep -q 'versionCode 62' app/build.gradle
+          grep -q "versionName '1.24.5'" app/build.gradle
+          grep -q 'versionCode 63' app/build.gradle
 
-      - name: Verify v1.24.4 Phisk Cache integration, Native Browse Categories, Phisk Collections and preserved app functionality
+      - name: Verify v1.24.5 Phisk Cache integration, Native Browse Categories, Phisk Collections and preserved app functionality
         shell: bash
         run: |
           set -euo pipefail
@@ -187,8 +187,8 @@ jobs:
 
           VERSION_NAME="$(sed -n "s/.*versionName '\([^']*\)'.*/\1/p" app/build.gradle | head -n1)"
           VERSION_CODE="$(sed -n "s/.*versionCode \([0-9][0-9]*\).*/\1/p" app/build.gradle | head -n1)"
-          [[ "$VERSION_NAME" == "1.24.4" ]] || { echo "::error::Expected Android version 1.24.4, found: $VERSION_NAME"; exit 1; }
-          [[ "$VERSION_CODE" == "62" ]] || { echo "::error::Expected Android versionCode 62, found: $VERSION_CODE"; exit 1; }
+          [[ "$VERSION_NAME" == "1.24.5" ]] || { echo "::error::Expected Android version 1.24.5, found: $VERSION_NAME"; exit 1; }
+          [[ "$VERSION_CODE" == "63" ]] || { echo "::error::Expected Android versionCode 63, found: $VERSION_CODE"; exit 1; }
           test -n "$VERSION_CODE"
 
           SETTINGS="app/src/main/java/co/phisk/videos/NativeSettingsActivity.java"
@@ -240,8 +240,8 @@ jobs:
           grep -q 'decodeTitle' "$STUDIO"
           ! grep -q 'Upload video' "$STUDIO"
           ! grep -q 'Write a Story' "$STUDIO"
-          grep -q 'versionName '\''1.24.4'\''' app/build.gradle
-          grep -q 'versionCode 62' app/build.gradle
+          grep -q 'versionName '\''1.24.5'\''' app/build.gradle
+          grep -q 'versionCode 63' app/build.gradle
 
           # Native onboarding v1.18.0: verify the three approved onboarding
           # experiences are present in the extracted Android source/resources.
@@ -277,7 +277,7 @@ jobs:
           grep -q 'per_page=10' "$CATEGORY"
           grep -q 'NativeCategoryActivity' app/src/main/AndroidManifest.xml
 
-          # Native Browse Categories v1.24.4: render the administrator-configured
+          # Native Browse Categories v1.24.5: render the administrator-configured
           # browse_categories section in Explore order, use featured category
           # image_url metadata, and route View All to the native directory.
           BROWSE="app/src/main/java/co/phisk/videos/NativeBrowseCategoriesActivity.java"
@@ -386,7 +386,7 @@ jobs:
           grep -q 'BORDER=Color.rgb(232,233,238)' "$WATCH"
           grep -q 'SKELETON=Color.rgb(238,239,243)' "$WATCH"
 
-          # v1.24.4 maintenance: stop/remove skeleton animations on content replacement
+          # v1.24.5 maintenance: stop/remove skeleton animations on content replacement
           # and prevent Explore search autofocus/keyboard popup on initial launch.
           grep -q 'showFeedSkeleton' "$HOME"
           grep -q 'stopSkeletonAnimations' "$HOME"
@@ -398,7 +398,7 @@ jobs:
           grep -q 'stopSkeletonAnimations(content)' "$WATCH"
           grep -q 'stopSkeletonAnimations(content);content.removeAllViews()' "$WATCH"
 
-          # Native Upload + Creator Studio v1.24.4: elegant skeleton loading,
+          # Native Upload + Creator Studio v1.24.5: elegant skeleton loading,
           # matching homepage skeleton/border palette, lifecycle cleanup, and dividers.
           UPLOAD="app/src/main/java/co/phisk/videos/NativeVideoUploadActivity.java"
           STUDIO="app/src/main/java/co/phisk/videos/NativeCreatorStudioActivity.java"
@@ -423,8 +423,8 @@ jobs:
           grep -q 'private void section' "$STUDIO"
           grep -q 'onDestroy()' "$STUDIO"
 
-          grep -q 'versionName '\''1.24.4'\''' app/build.gradle
-          grep -q 'versionCode 62' app/build.gradle
+          grep -q 'versionName '\''1.24.5'\''' app/build.gradle
+          grep -q 'versionCode 63' app/build.gradle
 
           # Native Password & Security v1.20.1: ensure the website's Privacy & Security
           # functionality is available through the native app destination.
@@ -445,7 +445,7 @@ jobs:
           grep -q 'PhiskTheme.configureActivityTheme(this)' "$PASSWORD_SECURITY"
           grep -q 'PhiskTheme.isDark(this)' "$PASSWORD_SECURITY"
 
-          # Native Phisk editorial slider v1.24.4: full-width 16:9 hero,
+          # Native Phisk editorial slider v1.24.5: full-width 16:9 hero,
           # transparent-to-black gradient, title/count overlay, violet dots,
           # swipe/dot navigation, crossfade, 6.5s auto-advance and lifecycle pause.
           COLLECTIONS="app/src/main/java/co/phisk/videos/NativeCollectionActivity.java"
@@ -488,10 +488,10 @@ jobs:
           grep -q 'videos' "$COLLECTIONS"
           grep -q 'position' "$COLLECTIONS"
           grep -q 'NativePlayerActivity' "$COLLECTIONS"
-          grep -q 'versionName '\''1.24.4'\''' app/build.gradle
-          grep -q 'versionCode 62' app/build.gradle
+          grep -q 'versionName '\''1.24.5'\''' app/build.gradle
+          grep -q 'versionCode 63' app/build.gradle
 
-          # Native Channel v1.24.4: the uploaded source is compiled by the
+          # Native Channel v1.24.5: the uploaded source is compiled by the
           # release build below. Avoid brittle text assertions against Java
           # formatting or implementation-specific identifiers; preserve all
           # established cross-feature regression checks above.
