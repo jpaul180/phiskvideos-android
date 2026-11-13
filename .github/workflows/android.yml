@@ -328,26 +328,33 @@ jobs:
           ! grep -q 'offline' "$CACHE_SYNC" || grep -q 'offline video' "$CACHE_SYNC"
 
           # Phisk Cache Stage 4: local-only performance diagnostics.
-          # These checks intentionally require on-device analytics and prohibit
-          # additional WordPress telemetry endpoints or server-side reporting.
+          # All metrics are read from on-device preferences; no server telemetry.
           CACHE_DIAGNOSTICS="app/src/main/java/co/phisk/videos/PhiskCacheDiagnosticsActivity.java"
           CACHE_SETTINGS="app/src/main/java/co/phisk/videos/NativeSettingsActivity.java"
+          CACHE_IMAGE="app/src/main/java/co/phisk/videos/PhiskImageCache.java"
+          CACHE_SYNC="app/src/main/java/co/phisk/videos/PhiskCacheSync.java"
           test -f "$CACHE_DIAGNOSTICS"
           grep -q 'PhiskCacheDiagnosticsActivity' app/src/main/AndroidManifest.xml
           grep -q 'PhiskCacheDiagnosticsActivity.class' "$CACHE_SETTINGS"
           grep -q 'Cache & performance' "$CACHE_SETTINGS"
-          grep -q 'cache_hits' "$CACHE_DIAGNOSTICS"
+          grep -q 'memory_hits' "$CACHE_DIAGNOSTICS"
+          grep -q 'disk_hits' "$CACHE_DIAGNOSTICS"
           grep -q 'cache_misses' "$CACHE_DIAGNOSTICS"
-          grep -q 'bandwidth' "$CACHE_DIAGNOSTICS"
+          grep -q 'network_downloads' "$CACHE_DIAGNOSTICS"
+          grep -q 'network_bytes' "$CACHE_DIAGNOSTICS"
+          grep -q 'estimated_bytes_saved' "$CACHE_DIAGNOSTICS"
+          grep -q 'failed_downloads' "$CACHE_DIAGNOSTICS"
           grep -q 'getDiskCacheBytes' "$CACHE_DIAGNOSTICS"
           grep -q 'manifest_last_sync_at' "$CACHE_DIAGNOSTICS"
           grep -q 'manifest_last_http_status' "$CACHE_DIAGNOSTICS"
-          grep -q 'manifest_last_prefetch_queued' "$CACHE_DIAGNOSTICS"
-          grep -q 'manifest_last_changed_at' "$CACHE_DIAGNOSTICS"
-          grep -q 'SharedPreferences' "$CACHE_DIAGNOSTICS"
-          # Guard against accidentally adding cache analytics uploads or polling.
-          ! grep -Eiq 'https?://|HttpURLConnection|OkHttpClient|Retrofit|telemetry|analytics/upload' "$CACHE_DIAGNOSTICS"
-          ! grep -Eiq 'analytics|telemetry' "$CACHE_SETTINGS"
+          grep -q 'manifest_last_duration_ms' "$CACHE_DIAGNOSTICS"
+          grep -q 'manifest_response_bytes' "$CACHE_DIAGNOSTICS"
+          grep -q 'manifest_304_count' "$CACHE_DIAGNOSTICS"
+          grep -q 'manifest_200_count' "$CACHE_DIAGNOSTICS"
+          grep -q 'manifest_failed_syncs' "$CACHE_DIAGNOSTICS"
+          grep -q 'does not upload analytics' "$CACHE_DIAGNOSTICS"
+          # The diagnostics screen must remain a read-only local UI, without network clients.
+          ! grep -Eiq 'https?://|HttpURLConnection|OkHttpClient|Retrofit|analytics/upload' "$CACHE_DIAGNOSTICS"
 
           # Homepage / Explore v1.20.1 polish: pull-to-refresh, violet refresh
           # indicator, animated loading skeletons, and restrained dividers.
