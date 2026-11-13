@@ -188,7 +188,7 @@ jobs:
           VERSION_NAME="$(sed -n "s/.*versionName '\([^']*\)'.*/\1/p" app/build.gradle | head -n1)"
           VERSION_CODE="$(sed -n "s/.*versionCode \([0-9][0-9]*\).*/\1/p" app/build.gradle | head -n1)"
           [[ "$VERSION_NAME" == "1.24.3" ]] || { echo "::error::Expected Android version 1.24.3, found: $VERSION_NAME"; exit 1; }
-          [[ "$VERSION_CODE" == "60" ]] || { echo "::error::Expected Android versionCode 61, found: $VERSION_CODE"; exit 1; }
+          [[ "$VERSION_CODE" == "61" ]] || { echo "::error::Expected Android versionCode 61, found: $VERSION_CODE"; exit 1; }
           test -n "$VERSION_CODE"
 
           SETTINGS="app/src/main/java/co/phisk/videos/NativeSettingsActivity.java"
