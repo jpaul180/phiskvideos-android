@@ -1,4 +1,4 @@
-name: Build PhiskVideos Android v1.24.3 (Phisk Cache Stage 3)
+name: Build PhiskVideos Android v1.24.3 (Phisk Cache Stage 4)
 
 on:
   workflow_dispatch:
@@ -32,11 +32,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract v1.24.3 Phisk Cache Stage 3 source archive
+      - name: Extract v1.24.3 Phisk Cache Stage 4 source archive
         shell: bash
         run: |
           set -euo pipefail
-          ARCHIVE="PhiskVideos-Android-v1.24.3-Phisk-Cache-Stage-3.zip"
+          ARCHIVE="PhiskVideos-Android-v1.24.3-Phisk-Cache-Stage-4.zip"
           if [[ ! -f "$ARCHIVE" ]]; then
             echo "::error::Missing $ARCHIVE. Upload the updated source ZIP to the repository root."
             echo "Repository root files:"
