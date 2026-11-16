@@ -1,4 +1,4 @@
-name: Build PhiskVideos Android v1.25.2 (Native Stories Improvement)
+name: Build PhiskVideos Android v1.26.0 (Native Story Detail)
 
 on:
   workflow_dispatch:
@@ -32,11 +32,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract v1.25.2 Native Stories Pagination source archive
+      - name: Extract v1.26.0 Native Story Detail source archive
         shell: bash
         run: |
           set -euo pipefail
-          ARCHIVE="PhiskVideos-Android-v1.25.2-Stories-Discover-Diags.zip"
+          ARCHIVE="PhiskVideos-Android-v1.26.0-Native-Story-Detail.zip"
           if [[ ! -f "$ARCHIVE" ]]; then
             echo "::error::Missing $ARCHIVE. Upload the updated source ZIP to the repository root."
             echo "Repository root files:"
@@ -87,7 +87,7 @@ jobs:
 
           echo "ANDROID_PROJECT_DIR=$PROJECT_ROOT" >> "$GITHUB_ENV"
 
-      - name: Apply v1.25.2 release version and Stories network safeguards
+      - name: Apply v1.26.0 release version and preserve Stories network safeguards
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -118,8 +118,8 @@ jobs:
               print("Source has a different onDestroy implementation; leaving it unchanged rather than applying an unsafe text patch.")
           g = Path("app/build.gradle")
           build = g.read_text()
-          build, name_count = re.subn(r"versionName\s+'[^']+'", "versionName '1.25.2'", build, count=1)
-          build, code_count = re.subn(r"versionCode\s+\d+", "versionCode 67", build, count=1)
+          build, name_count = re.subn(r"versionName\s+'[^']+'", "versionName '1.26.0'", build, count=1)
+          build, code_count = re.subn(r"versionCode\s+\d+", "versionCode 68", build, count=1)
           if name_count != 1 or code_count != 1:
               raise SystemExit(f"Could not safely set release version (versionName matches={name_count}, versionCode matches={code_count}).")
           g.write_text(build)
@@ -170,10 +170,10 @@ jobs:
               updated = updated.replace("private void showError(int index,String message){feedList.removeAllViews();", "private void showError(int index,String message){stopSkeletonAnimations(feedList);feedList.removeAllViews();")
               home.write_text(updated)
           PY
-          grep -q "versionName '1.25.2'" app/build.gradle
-          grep -q 'versionCode 67' app/build.gradle
+          grep -q "versionName '1.26.0'" app/build.gradle
+          grep -q 'versionCode 68' app/build.gradle
 
-      - name: Verify v1.25.2 Native Stories pagination, Phisk Cache integration, Native Browse Categories, Phisk Collections and preserved app functionality
+      - name: Verify v1.26.0 Native Story Detail, Stories pagination, Phisk Cache integration, Native Browse Categories, Phisk Collections and preserved app functionality
         shell: bash
         run: |
           set -euo pipefail
@@ -199,7 +199,7 @@ jobs:
           VERSION_NAME="$(sed -n "s/.*versionName '\([^']*\)'.*/\1/p" app/build.gradle | head -n1)"
           VERSION_CODE="$(sed -n "s/.*versionCode \([0-9][0-9]*\).*/\1/p" app/build.gradle | head -n1)"
           [[ "$VERSION_NAME" == "1.25.2" ]] || { echo "::error::Expected Android version 1.25.2, found: $VERSION_NAME"; exit 1; }
-          [[ "$VERSION_CODE" == "67" ]] || { echo "::error::Expected Android versionCode 67, found: $VERSION_CODE"; exit 1; }
+          [[ "$VERSION_CODE" == "67" ]] || { echo "::error::Expected Android versionCode 68, found: $VERSION_CODE"; exit 1; }
           test -n "$VERSION_CODE"
 
           SETTINGS="app/src/main/java/co/phisk/videos/NativeSettingsActivity.java"
@@ -252,7 +252,7 @@ jobs:
           ! grep -q 'Upload video' "$STUDIO"
           ! grep -q 'Write a Story' "$STUDIO"
           grep -q 'versionName '\''1.25.2'\''' app/build.gradle
-          grep -q 'versionCode 67' app/build.gradle
+          grep -q 'versionCode 68' app/build.gradle
 
           # Native onboarding v1.18.0: verify the three approved onboarding
           # experiences are present in the extracted Android source/resources.
@@ -435,7 +435,7 @@ jobs:
           grep -q 'onDestroy()' "$STUDIO"
 
           grep -q 'versionName '\''1.25.2'\''' app/build.gradle
-          grep -q 'versionCode 67' app/build.gradle
+          grep -q 'versionCode 68' app/build.gradle
 
           # Native Password & Security v1.20.1: ensure the website's Privacy & Security
           # functionality is available through the native app destination.
@@ -500,7 +500,7 @@ jobs:
           grep -q 'position' "$COLLECTIONS"
           grep -q 'NativePlayerActivity' "$COLLECTIONS"
           grep -q 'versionName '\''1.25.2'\''' app/build.gradle
-          grep -q 'versionCode 67' app/build.gradle
+          grep -q 'versionCode 68' app/build.gradle
 
           # Native Channel Content Management regression checks: owner menu assets and native
           # statistics/editor screens plus secure on-demand media replacement.
@@ -549,7 +549,23 @@ jobs:
           grep -Fq "min(20, max(1, absint(\$request->get_param('per_page') ?: 10)))" phisk-video-manager/phiskvideos-movie-tv.php
           grep -q 'permalink' "$HOME"
           grep -q 'versionName '\''1.25.2'\''' app/build.gradle
-          grep -q 'versionCode 67' app/build.gradle
+          grep -q 'versionCode 68' app/build.gradle
+
+          # Native Story Detail v1.26.0: Stories open in the dedicated native reader,
+          # receive the complete feed item, and preserve native creator navigation.
+          STORY_DETAIL="app/src/main/java/co/phisk/videos/NativeStoryDetailActivity.java"
+          test -f "$STORY_DETAIL"
+          grep -q 'NativeStoryDetailActivity' app/src/main/AndroidManifest.xml
+          grep -q 'NativeStoryDetailActivity.class' "$HOME"
+          grep -q 'story_json' "$HOME"
+          grep -q 'Html.fromHtml' "$STORY_DETAIL"
+          grep -q 'StoryImageGetter' "$STORY_DETAIL"
+          grep -q 'author_avatar' "$STORY_DETAIL"
+          grep -q 'author_id' "$STORY_DETAIL"
+          grep -q 'NativeCreatorChannelActivity.class' "$STORY_DETAIL"
+          grep -q 'ACTION_SEND' "$STORY_DETAIL"
+          grep -q 'PhiskTheme.isDark(this)' "$STORY_DETAIL"
+          ! grep -Eiq 'Like|Comment' "$STORY_DETAIL"
 
           # Native Channel v1.24.6: the uploaded source is compiled by the
           # release build below. Avoid brittle text assertions against Java
