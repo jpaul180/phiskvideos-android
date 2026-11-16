@@ -173,6 +173,30 @@ jobs:
           grep -q "versionName '1.26.0'" app/build.gradle
           grep -q 'versionCode 68' app/build.gradle
 
+      - name: Fix Native Story Detail divider variable collision
+        shell: bash
+        run: |
+          set -euo pipefail
+          STORY="$ANDROID_PROJECT_DIR/app/src/main/java/co/phisk/videos/NativeStoryDetailActivity.java"
+          test -f "$STORY"
+          python3 - "$STORY" <<'PY'
+          from pathlib import Path
+          import sys
+          p = Path(sys.argv[1])
+          source = p.read_text()
+          broken = "View divider=new View(this);divider.setBackgroundColor(divider);"
+          fixed = "View dividerView=new View(this);dividerView.setBackgroundColor(divider);"
+          if broken in source:
+              source = source.replace(broken, fixed, 1)
+              source = source.replace("body.addView(divider,dpv);", "body.addView(dividerView,dpv);", 1)
+              p.write_text(source)
+              print("Fixed the divider View/int name collision in NativeStoryDetailActivity.")
+          elif "View dividerView=new View(this);dividerView.setBackgroundColor(divider);" in source:
+              print("Native Story Detail divider collision is already fixed.")
+          else:
+              raise SystemExit("Expected Native Story Detail divider code was not found; refusing an unsafe patch.")
+          PY
+
       - name: Verify v1.26.0 Native Story Detail, Stories pagination, Phisk Cache integration, Native Browse Categories, Phisk Collections and preserved app functionality
         shell: bash
         run: |
